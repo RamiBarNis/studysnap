@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StudySnap — Snap your homework, get a smart study plan</title>
+  <meta name="description" content="StudySnap turns a photo of your homework into a checklist, a study plan, and step-by-step AI explanations." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ======================= LANDING PAGE ======================= -->
+  <div id="view-landing">
+    <nav class="nav" aria-label="Main">
+      <div class="container nav-inner">
+        <a href="#" class="brand" data-action="go-landing">
+          <span class="brand-mark" data-icon="camera"></span>
+          StudySnap
+        </a>
+        <span class="spacer"></span>
+        <div class="nav-links">
+          <a class="nav-link" href="#features">Features</a>
+          <a class="nav-link" href="#how-it-works">How it works</a>
+          <button class="icon-btn theme-toggle" type="button" aria-label="Switch to dark mode"></button>
+          <button class="btn btn-primary btn-sm" type="button" data-action="go-app">
+            Open the app <span data-icon="arrow-right"></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero container">
+      <span class="hero-badge"><span data-icon="sparkles"></span> AI homework helper for students</span>
+      <h1>Snap your homework.<br /><span class="hl">We'll plan the rest.</span></h1>
+      <p class="lede">
+        Take a photo of any worksheet or assignment sheet. StudySnap turns it into a
+        checklist, builds your study plan, and explains the hard problems step by step.
+      </p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" type="button" data-action="go-app">
+          <span data-icon="camera"></span> Scan your first assignment
+        </button>
+        <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
+      </div>
+      <div class="hero-stats" role="list">
+        <div role="listitem"><strong>120k+</strong> assignments scanned</div>
+        <div role="listitem"><strong>32 min</strong> saved per study session</div>
+        <div role="listitem"><strong>4.8 / 5</strong> student rating</div>
+      </div>
+    </header>
+
+    <section class="features container" id="features" aria-labelledby="features-title">
+      <h2 class="section-title" id="features-title">Everything between “ugh, homework” and “done”</h2>
+      <p class="section-sub">Four tools that work together so you always know what to do next.</p>
+      <div class="feature-grid">
+        <article class="card feature">
+          <span class="feature-icon fi-orange" data-icon="scan"></span>
+          <h3>Snap &amp; scan</h3>
+          <p>Photograph a worksheet and StudySnap pulls out every task, due date, and subject automatically.</p>
+        </article>
+        <article class="card feature">
+          <span class="feature-icon fi-blue" data-icon="sparkles"></span>
+          <h3>AI explanations</h3>
+          <p>Stuck on a problem? Get patient, step-by-step explanations — not just the answer.</p>
+        </article>
+        <article class="card feature">
+          <span class="feature-icon fi-green" data-icon="calendar"></span>
+          <h3>Smart study plans</h3>
+          <p>A realistic plan built around your due dates, energy, and how long things actually take.</p>
+        </article>
+        <article class="card feature">
+          <span class="feature-icon fi-purple" data-icon="timer"></span>
+          <h3>Focus timer</h3>
+          <p>Built-in Pomodoro sessions with breaks, so you study in sprints instead of all-nighters.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="steps container" id="how-it-works" aria-labelledby="steps-title">
+      <h2 class="section-title" id="steps-title">How it works</h2>
+      <p class="section-sub">From photo to plan in under a minute.</p>
+      <div class="steps-grid">
+        <div class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <h3>Snap a photo</h3>
+          <p>Worksheet, syllabus, whiteboard — anything with assignments on it.</p>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <h3>Review your checklist</h3>
+          <p>StudySnap detects tasks and due dates. You confirm with one tap.</p>
+        </div>
+        <div class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <h3>Follow your plan</h3>
+          <p>Short focus blocks, scheduled breaks, and AI help when you're stuck.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band container">
+      <div class="cta-card">
+        <h2>Tonight's homework, sorted in one snap</h2>
+        <p>Free to try — no account needed for this demo. Jump in and scan your first assignment.</p>
+        <button class="btn" type="button" data-action="go-app">
+          <span data-icon="camera"></span> Try StudySnap now
+        </button>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <span>© 2026 StudySnap · Demo with mock data</span>
+        <span>Made for students, by students</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ======================= APP DASHBOARD ======================= -->
+  <div id="view-app" hidden>
+    <nav class="nav" aria-label="App">
+      <div class="container nav-inner">
+        <a href="#" class="brand" data-action="go-landing">
+          <span class="brand-mark" data-icon="camera"></span>
+          StudySnap
+        </a>
+        <span class="spacer"></span>
+        <div class="nav-links">
+          <button class="icon-btn theme-toggle" type="button" aria-label="Switch to dark mode"></button>
+          <button class="btn btn-ghost btn-sm" type="button" data-action="go-landing">Back to site</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="app-main container">
+      <div class="app-greeting">
+        <h1>Hey Rami <span aria-hidden="true">—</span> let's clear today's list</h1>
+        <p id="greeting-sub">Wednesday, June 11 · 4 tasks left · Math worksheet is due today</p>
+      </div>
+
+      <div class="dash-grid">
+        <!-- LEFT COLUMN -->
+        <div class="dash-col">
+
+          <!-- Upload section -->
+          <section class="card" aria-labelledby="upload-title">
+            <div class="card-head">
+              <span data-icon="camera"></span>
+              <h2 id="upload-title">Scan new homework</h2>
+            </div>
+            <div class="dropzone" id="dropzone">
+              <span class="icon-wrap" data-icon="upload"></span>
+              <h3>Drag a photo here</h3>
+              <p>JPG, PNG or HEIC — a clear shot of the whole page works best.</p>
+              <div class="dropzone-actions">
+                <button class="btn btn-primary btn-sm" type="button" id="browse-btn">
+                  <span data-icon="image"></span> Choose a photo
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" id="sample-btn">
+                  <span data-icon="zap"></span> Try a sample scan
+                </button>
+              </div>
+              <input type="file" id="file-input" accept="image/*" class="visually-hidden" aria-label="Upload a homework photo" />
+            </div>
+            <div id="scan-area" aria-live="polite"></div>
+          </section>
+
+          <!-- Homework checklist -->
+          <section class="card" aria-labelledby="checklist-title">
+            <div class="card-head">
+              <span data-icon="list-checks"></span>
+              <h2 id="checklist-title">Homework checklist</h2>
+              <span class="spacer"></span>
+              <button class="btn btn-ghost btn-sm" type="button" id="add-task-btn">
+                <span data-icon="plus"></span> Add task
+              </button>
+            </div>
+            <div class="progress-summary">
+              <div class="progress-track" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+              </div>
+              <span class="progress-label" id="progress-label">0 of 0 done</span>
+            </div>
+            <div class="filter-row" role="group" aria-label="Filter tasks">
+              <button class="filter-btn" type="button" data-filter="all" aria-pressed="true">All</button>
+              <button class="filter-btn" type="button" data-filter="todo" aria-pressed="false">To do</button>
+              <button class="filter-btn" type="button" data-filter="done" aria-pressed="false">Done</button>
+            </div>
+            <ul class="task-list" id="task-list"></ul>
+          </section>
+
+          <!-- AI explanation -->
+          <section class="card ai-section" aria-labelledby="ai-title">
+            <div class="card-head">
+              <span data-icon="sparkles"></span>
+              <h2 id="ai-title">AI explanation</h2>
+            </div>
+            <p class="card-sub">From your scanned Math worksheet — tap a step to follow along.</p>
+            <div id="ai-area"></div>
+          </section>
+
+          <!-- Learning resources -->
+          <section class="card resources-section" aria-labelledby="resources-title">
+            <div class="card-head">
+              <span data-icon="book-open"></span>
+              <h2 id="resources-title">Learning resources</h2>
+            </div>
+            <p class="card-sub">Picked for the subjects on your checklist this week.</p>
+            <div class="filter-row" role="group" aria-label="Filter resources by subject" id="resource-filters"></div>
+            <div class="resource-grid" id="resource-grid"></div>
+          </section>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="dash-col">
+
+          <!-- Pomodoro timer -->
+          <section class="card pomodoro" id="pomodoro" aria-labelledby="pomo-title">
+            <div class="card-head" style="justify-content:center">
+              <span data-icon="timer"></span>
+              <h2 id="pomo-title">Focus timer</h2>
+            </div>
+            <div class="pomo-task">
+              <span class="pomo-task-kind" id="pomo-kind">Focus</span>
+              <span class="pomo-task-name" id="pomo-task">Loading your plan…</span>
+            </div>
+            <div class="pomo-ring-wrap" id="pomo-ring-wrap">
+              <svg class="pomo-ring" viewBox="0 0 220 220" aria-hidden="true">
+                <circle class="track" cx="110" cy="110" r="98" fill="none" stroke-width="12" />
+                <circle class="fill" id="pomo-fill" cx="110" cy="110" r="98" fill="none" stroke-width="12" stroke-linecap="round" />
+              </svg>
+              <div class="pomo-readout">
+                <span class="pomo-time" id="pomo-time" role="timer" aria-live="off">25:00</span>
+                <span class="pomo-label" id="pomo-label" aria-live="polite">Ready when you are</span>
+              </div>
+            </div>
+            <div class="pomo-controls">
+              <button class="btn btn-primary" type="button" id="pomo-start">
+                <span data-icon="play"></span> Start
+              </button>
+              <button class="icon-btn" type="button" id="pomo-reset" aria-label="Reset this session">
+                <span data-icon="rotate-ccw"></span>
+              </button>
+              <button class="icon-btn" type="button" id="pomo-skip" aria-label="Skip to next session">
+                <span data-icon="skip-forward"></span>
+              </button>
+            </div>
+            <div class="pomo-sessions" id="pomo-sessions"></div>
+          </section>
+
+          <!-- Study plan recommendation -->
+          <section class="card plan-card" aria-labelledby="plan-title">
+            <div class="card-head">
+              <span data-icon="calendar"></span>
+              <h2 id="plan-title">Recommended study plan</h2>
+            </div>
+            <div id="plan-area"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal + toast mount points -->
+  <div id="modal-root"></div>
+  <div class="toast-region" id="toast-root" aria-live="polite"></div>
+
+  <script src="js/icons.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/pomodoro.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
