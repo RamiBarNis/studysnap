@@ -16,13 +16,16 @@
     lastFocusedEl: null
   };
 
+  var damagedStorage = false;
   function saveTasks() {
+    if (damagedStorage) { toast("הנתונים השמורים פגומים. השמירה נעצרה כדי לא לדרוס אותם.", "flag"); return false; }
     try {
       localStorage.setItem(TASKS_KEY, JSON.stringify({
         tasks: state.tasks,
         detectedAdded: state.detectedAdded
       }));
-    } catch (e) { toast("Could not save tasks. Export a backup before closing.", "flag"); }
+      return true;
+    } catch (e) { toast("לא ניתן לשמור את השינוי בדפדפן. בדוק מקום פנוי ונסה שוב.", "flag"); return false; }
   }
 
   function loadSavedTasks() {
@@ -30,11 +33,12 @@
       var raw = localStorage.getItem(TASKS_KEY);
       if (!raw) return;
       var saved = JSON.parse(raw);
+      if (!saved || !Array.isArray(saved.tasks)) throw Error("Invalid saved tasks");
       if (Array.isArray(saved.tasks)) {
-        state.tasks = saved.tasks;
+        state.tasks = window.StudyBrainBackup.parse(saved);
         state.detectedAdded = !!saved.detectedAdded;
       }
-    } catch (e) { /* corrupt data — fall back to mock */ }
+    } catch (e) { damagedStorage = true; toast("לא ניתן לטעון את המטלות השמורות. הנתונים המקוריים נשמרו ללא שינוי.", "flag"); }
   }
 
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -166,21 +170,21 @@
     list.innerHTML = tasks.map(function (t) {
       var doneSub = t.subtasks.filter(function (s) { return s.done; }).length;
       return (
-        '<li class="task-item' + (t.completed ? " done" : "") + '" data-id="' + t.id + '">' +
-          '<button class="task-check" type="button" data-toggle="' + t.id + '" role="checkbox" aria-checked="' + t.completed + '" aria-label="Mark “' + escapeHtml(t.title) + '” as ' + (t.completed ? "not done" : "done") + '">' +
+        '<li class="task-item' + (t.completed ? " done" : "") + '" data-id="' + escapeHtml(t.id) + '">' +
+          '<button class="task-check" type="button" data-toggle="' + escapeHtml(t.id) + '" role="checkbox" aria-checked="' + t.completed + '" aria-label="Mark “' + escapeHtml(t.title) + '” as ' + (t.completed ? "not done" : "done") + '">' +
             icon("check") +
           "</button>" +
           '<div class="task-body">' +
-            '<button class="task-title-btn" type="button" data-open="' + t.id + '">' + escapeHtml(t.title) + "</button>" +
+            '<button class="task-title-btn" type="button" data-open="' + escapeHtml(t.id) + '">' + escapeHtml(t.title) + "</button>" +
             '<div class="task-meta">' +
               subjectChip(t.subject) +
-              '<span class="meta-bit' + (t.due === "Today" ? " due-today" : "") + '">' + icon("calendar") + "Due " + escapeHtml(t.due) + "</span>" +
-              '<span class="meta-bit">' + icon("clock") + t.estMinutes + " min</span>" +
+              '<span class="meta-bit' + (t.due === "Today" ? " due-today" : "") + '">' + icon("calendar") + (t.due === "No deadline" ? "ללא מועד הגשה" : "להגשה: " + escapeHtml(t.due)) + "</span>" +
+              '<span class="meta-bit">' + icon("clock") + t.estMinutes + " דקות</span>" +
               prioBadge(t.priority) +
               '<span class="meta-bit">' + icon("list-checks") + doneSub + "/" + t.subtasks.length + "</span>" +
             "</div>" +
           "</div>" +
-          '<button class="icon-btn task-open" type="button" data-open="' + t.id + '" aria-label="Open details for ' + escapeHtml(t.title) + '">' +
+          '<button class="icon-btn task-open" type="button" data-open="' + escapeHtml(t.id) + '" aria-label="Open details for ' + escapeHtml(t.title) + '">' +
             icon("chevron-right") +
           "</button>" +
         "</li>"
@@ -192,14 +196,17 @@
   function toggleTask(id) {
     var t = state.tasks.find(function (x) { return x.id === id; });
     if (!t) return;
+    var previous = JSON.parse(JSON.stringify(t));
     t.completed = !t.completed;
     if (t.completed) {
       t.subtasks.forEach(function (s) { s.done = true; });
-      toast("Nice! \u201c" + t.title + "\u201d checked off", "check-circle");
+
     }
-    saveTasks();
+    if (!saveTasks()) { Object.assign(t, previous); return false; }
+    if (t.completed) window.StudyBrainTimer.pause(t.id);
     renderTasks();
     renderPlan();
+    return true;
   }
 
   function initChecklist() {
@@ -304,26 +311,27 @@
         return;
       }
       titleEl.classList.remove("invalid");
+      if (!$("#at-due").reportValidity() || !$("#at-mins").reportValidity()) return;
       var due = $("#at-due").value || "No deadline";
       var newTask = {
-        id: "m" + Date.now(),
+        id: crypto.randomUUID(),
         title: title,
         subject: $("#at-subject").value.trim() || "General",
         due: due,
         dueDate: resolveDueDate(due),
         priority: $("#at-priority").value,
-        estMinutes: Math.min(300, Math.max(5, parseInt($("#at-mins").value, 10) || 30)),
+        estMinutes: Math.min(300, Math.max(5, Number($("#at-mins").value) || 30)),
         completed: false,
         source: $("#modal-save").dataset.source || "Added manually",
         description: "",
         subtasks: []
       };
       state.tasks.push(newTask);
-      saveTasks();
+      if (!saveTasks()) { state.tasks.pop(); return; }
       renderTasks();
       renderPlan();
       closeModal();
-      toast("Task added: " + title, "list-checks");
+      toast("נוספה מטלה: " + title, "list-checks");
     });
 
     $("#at-title").focus();
@@ -356,8 +364,8 @@
             '<div class="modal-tags">' + subjectChip(t.subject) + prioBadge(t.priority) + "</div>" +
             '<p class="modal-desc">' + escapeHtml(t.description) + "</p>" +
             '<div class="modal-facts">' +
-              '<div class="fact">להגשה עד<strong>' + escapeHtml(t.due) + " · " + escapeHtml(t.dueDate) + "</strong></div>" +
-              '<div class="fact">זמן משוער<strong>' + t.estMinutes + " min</strong></div>" +
+              '<div class="fact">להגשה עד<strong>' + (t.due === "No deadline" ? "לא נקבע" : escapeHtml(t.due)) + "</strong></div>" +
+              '<div class="fact">זמן משוער<strong>' + t.estMinutes + " דקות</strong></div>" +
               '<div class="fact">מקור<strong>' + escapeHtml(t.source) + "</strong></div>" +
             "</div>" +
             (t.subtasks.length ? '<h3 class="subtasks-title">שלבים במטלה</h3>' : '') +
@@ -376,8 +384,7 @@
     overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
     $("#modal-close").addEventListener("click", closeModal);
     $("#modal-complete").addEventListener("click", function () {
-      toggleTask(id);
-      closeModal();
+      if (toggleTask(id)) closeModal();
     });
     window.StudyBrainTimer.mount($("#task-focus"), t);
     var aiBtn = $("#modal-ai");
@@ -394,7 +401,7 @@
       btn.addEventListener("click", function () {
         var idx = Number(btn.getAttribute("data-subtask"));
         t.subtasks[idx].done = !t.subtasks[idx].done;
-        saveTasks();
+        if (!saveTasks()) { t.subtasks[idx].done = !t.subtasks[idx].done; return; }
         openTaskModal(id); // re-render modal in place
         renderTasks();
       });
@@ -407,7 +414,7 @@
     if (e.key === "Escape") closeModal();
     if (e.key === "Tab") {
       // simple focus trap
-      var focusables = $all(".modal button, .modal input, .modal select, .modal textarea", $("#modal-root"));
+      var focusables = $all(".modal button:not(:disabled), .modal input:not(:disabled), .modal select:not(:disabled), .modal textarea:not(:disabled)", $("#modal-root"));
       if (!focusables.length) return;
       var first = focusables[0];
       var last = focusables[focusables.length - 1];
@@ -552,7 +559,7 @@
       var hh = Math.floor(min / 60) % 24;
       var mm = min % 60;
       var h = hh % 12 || 12;
-      return h + ":" + (mm < 10 ? "0" + mm : mm) + " " + (hh >= 12 ? "PM" : "AM");
+      return String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0") + (min >= 1440 ? " (+" + Math.floor(min/1440) + " ימים)" : "");
     }
 
     var blocks = [];
@@ -569,7 +576,7 @@
         rem -= mins;
         var isLast = rem <= 0 && ti === ordered.length - 1;
         if (!isLast) {
-          blocks.push({ time: fmt(cursor), title: "Short break", subject: null, minutes: BRK, kind: "break" });
+          blocks.push({ time: fmt(cursor), title: "הפסקה", subject: null, minutes: BRK, kind: "break" });
           cursor += BRK;
         }
       }
@@ -578,19 +585,19 @@
     var focusCount = blocks.filter(function (b) { return b.kind === "focus"; }).length;
     var totalMin = blocks.reduce(function (s, b) { return s + b.minutes; }, 0);
     var h = Math.floor(totalMin / 60), m = totalMin % 60;
-    var dur = h > 0 ? h + " hr" + (m ? " " + m + " min" : "") : m + " min";
+    var dur = h > 0 ? h + " שעות" + (m ? " ו־" + m + " דקות" : "") : m + " דקות";
 
     var reasons = [];
     var todayTasks = ordered.filter(function (t) { return t.due === "Today"; });
     if (todayTasks.length) reasons.push(todayTasks[0].title + " is due today — it leads the plan");
     var highPri = ordered.filter(function (t) { return t.priority === "high" && t.due !== "Today"; });
-    if (highPri.length) reasons.push("High-priority tasks come next for your freshest focus");
-    if (focusCount > 1) reasons.push("50-minute blocks with 10-minute breaks keep your energy up");
+    if (highPri.length) reasons.push("באותו מועד הגשה, מטלות בעדיפות גבוהה מופיעות קודם");
+    if (focusCount > 1) reasons.push("מקטעי עבודה של עד 50 דקות והפסקות של 10 דקות");
 
     var tod = now.getHours() >= 18 ? "tonight" : now.getHours() >= 12 ? "this afternoon" : "this morning";
     return {
-      headline: "Your plan for " + tod,
-      summary: dur + " across " + focusCount + " focus block" + (focusCount !== 1 ? "s" : "") + ". " + ordered[0].title + " goes first.",
+      headline: "סדר העבודה לפי מועדי ההגשה",
+      summary: dur + " בסך הכול, כולל הפסקות. זו הערכה לכל המטלות הפתוחות, לא יעד להיום.",
       blocks: blocks,
       reasons: reasons
     };
@@ -620,7 +627,7 @@
                 '<span style="color:' + (kindColor[b.kind] || "var(--primary)") + ';display:inline-flex">' + icon(kindIcon[b.kind] || "pencil") + "</span>" +
                 '<span class="plan-pill-label">' + escapeHtml(b.title) + "</span>" +
                 (b.subject ? subjectChip(b.subject) : "") +
-                '<span class="plan-pill-mins">' + b.minutes + "m</span>" +
+                '<span class="plan-pill-mins">' + b.minutes + " דק׳</span>" +
               "</div>" +
             "</li>"
           );
@@ -742,14 +749,15 @@
     document.getElementById("export-tasks").addEventListener("click", function () {
       var blob = new Blob([JSON.stringify({exportedAt: new Date().toISOString(), tasks: state.tasks}, null, 2)], {type: "application/json"});
       var url = URL.createObjectURL(blob);
-      var link = document.createElement("a"); link.href = url; link.download = "studybrain-tasks.json"; link.click();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      var link = document.createElement("a"); link.href = url; link.download = "studybrain-tasks.json"; document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
     });
     document.getElementById("import-tasks").addEventListener("change", async function (event) {
       var input=event.target, file=input.files[0], status=document.getElementById("import-status");
       if (!file) return;
       try {
         if(file.size>2*1024*1024) throw Error("הגיבוי גדול מדי (עד 2MB).");
+        if (damagedStorage) throw Error("הנתונים הקיימים פגומים; יש לשחזרם לפני ייבוא.");
         var incoming=window.StudyBrainBackup.parse(JSON.parse(await file.text()));
         var merged=window.StudyBrainBackup.merge(state.tasks,incoming);
         localStorage.setItem(TASKS_KEY,JSON.stringify({tasks:merged.tasks,detectedAdded:state.detectedAdded}));

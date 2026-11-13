@@ -58,6 +58,7 @@
     el.querySelector(".task-timer-toggle").textContent = value.running ? "השהיה" : value.remaining === 0 ? "התחל מחדש · 50 דקות" : value.remaining < DURATION ? "המשך" : "התחל · 50 דקות";
   }
   root.StudyBrainTimer = {
+    pause: function(id) { var ok=clock.pause(id); render(); return ok; },
     mount: function (el, task) {
       mounted = {el: el, id: task.id};
       el.innerHTML = '<div class="task-timer-heading">זמן מיקוד למטלה</div><div class="task-timer-time" role="timer" aria-live="off" dir="ltr">50:00</div><p class="task-timer-status" aria-live="polite"></p><div class="task-timer-controls"><button type="button" class="btn btn-primary task-timer-toggle">התחל · 50 דקות</button><button type="button" class="btn btn-ghost task-timer-reset">איפוס ל־50 דקות</button></div><p class="task-timer-storage" role="status"></p>';

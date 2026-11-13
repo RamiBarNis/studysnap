@@ -30,8 +30,8 @@
       row.append(title, meta);
       row.append(button("הורדה לצירוף לצ׳אט", function () {
         var url = URL.createObjectURL(file.blob);
-        var link = document.createElement("a"); link.href = url; link.download = file.name; link.click();
-        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        var link = document.createElement("a"); link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
       }));
       row.append(button("יצירת מטלה", function () {
         window.dispatchEvent(new CustomEvent("studysnap-file-task", {detail: {name: file.name, course: file.course}}));

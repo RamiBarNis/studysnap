@@ -28,3 +28,21 @@ No JS error logs observed. At 390px the document width was 375px (no page overfl
 Calendar has intentional internal horizontal scrolling on narrow screens.
 Test data was confined to the existing localhost test origin; main origin untouched.
 Screenshot: `output/design/heart-home-tabs.png`.
+
+## Reliability review — 2026-11-13
+
+Fixed task IDs being interpolated as raw HTML attributes, malformed saved tasks
+breaking the interface, invalid imported calendar dates, and false success after
+storage failures. Failed task additions/completion changes roll back in memory.
+Corrupt persisted data is preserved and writes are blocked instead of overwriting it.
+Completing a task pauses its timer. Downloads attach the link to the document for
+browser compatibility. Planner copy now describes the complete backlog rather
+than promising to finish all semester tasks tonight; overnight times show day offsets.
+
+Validation: 9 Node tests passed, static build passed. Chrome test origin :8001:
+created a task, ran its timer across refresh, completed/reopened it, verified 100%
+heart completion and timer pause, created/edited an exam and verified persistence
+and calendar placement. At 390px, page width was 390px without horizontal overflow.
+Personal main-origin tasks were not changed. File upload/import UI could not be
+verified because the Chrome extension has file access disabled; backup parsing
+and merge behavior were tested separately. No Google login/cloud sync claim.

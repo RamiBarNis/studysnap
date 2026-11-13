@@ -5,7 +5,11 @@
     return data.tasks.map(function(t){
       if(!t || typeof t.id!=='string' || !t.id || typeof t.title!=='string' || !t.title.trim()) throw Error('מטלה ללא שם או מזהה.');
       function str(v,fallback,max){return typeof v==='string'?v.slice(0,max):fallback;}
-      var due=/^\d{4}-\d{2}-\d{2}$/.test(t.due)?t.due:'No deadline';
+      var due='No deadline';
+      if(typeof t.due==='string' && /^\d{4}-\d{2}-\d{2}$/.test(t.due)){
+        var d=new Date(t.due+'T12:00:00Z');
+        if(!isNaN(d) && d.toISOString().slice(0,10)===t.due) due=t.due;
+      }
       return {id:t.id.slice(0,160),title:t.title.slice(0,300),subject:str(t.subject,'כללי',200),due:due,dueDate:due,
         priority:['high','medium','low'].includes(t.priority)?t.priority:'medium',estMinutes:Math.max(5,Math.min(300,Number(t.estMinutes)||30)),
         completed:t.completed===true,source:str(t.source,'ייבוא גיבוי',1000),description:str(t.description,'',10000),
