@@ -1,4 +1,4 @@
-/* StudySnap — mock data. All content here is static demo data; no backend calls. */
+/* StudyBrain — mock data. All content here is static demo data; no backend calls. */
 (function () {
   "use strict";
 

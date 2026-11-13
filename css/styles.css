@@ -1,5 +1,5 @@
 /* ============================================================
-   StudySnap — design system & component styles
+   StudyBrain — design system & component styles
    Palette: playful orange (#F97316) + trust blue (#2563EB)
    Type:    Plus Jakarta Sans (Google Fonts) → system-ui fallback
    ============================================================ */
@@ -1172,3 +1172,14 @@ a { color: var(--accent); }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Course library: allow long Hebrew/English filenames on narrow screens. */
+.library-item { padding: 16px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.library-item p { color: var(--muted); margin: 8px 0; }
+#library-files { display: block; max-width: 100%; margin: 12px 0; }
+#library-course { margin-bottom: 16px; }
+[hidden] { display: none !important; }
+.dash-col { grid-template-columns: minmax(0, 1fr); }
+.plan-pill { flex-wrap: wrap; }
+.plan-pill-label { flex-basis: 60%; white-space: normal; overflow-wrap: anywhere; }
+.plan-pill .chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

@@ -1,4 +1,4 @@
-/* StudySnap — inline SVG icon library (Lucide-style, stroke icons).
+/* StudyBrain — inline SVG icon library (Lucide-style, stroke icons).
    Loaded as a plain script so the app works over file:// with no build step. */
 (function () {
   "use strict";

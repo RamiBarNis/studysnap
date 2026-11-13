@@ -1,4 +1,4 @@
-/* StudySnap — app logic (no framework, no build step).
+/* StudyBrain — app logic (no framework, no build step).
    State lives in memory; theme, last view, and tasks persist in localStorage. */
 (function () {
   "use strict";
@@ -8,7 +8,7 @@
   var TASKS_KEY = "studysnap-tasks";
 
   var state = {
-    tasks: MOCK.tasks.slice(),
+    tasks: [],
     filter: "all",
     resourceFilter: "All",
     detectedAdded: false,
@@ -22,7 +22,7 @@
         tasks: state.tasks,
         detectedAdded: state.detectedAdded
       }));
-    } catch (e) { /* private mode or storage quota */ }
+    } catch (e) { toast("Could not save tasks. Export a backup before closing.", "flag"); }
   }
 
   function loadSavedTasks() {
@@ -30,7 +30,7 @@
       var raw = localStorage.getItem(TASKS_KEY);
       if (!raw) return;
       var saved = JSON.parse(raw);
-      if (Array.isArray(saved.tasks) && saved.tasks.length) {
+      if (Array.isArray(saved.tasks)) {
         state.tasks = saved.tasks;
         state.detectedAdded = !!saved.detectedAdded;
       }
@@ -76,26 +76,11 @@
     });
   }
 
-  /* ---------- View switching ---------- */
-  function showView(name) {
-    var landing = $("#view-landing");
-    var app = $("#view-app");
-    landing.hidden = name !== "landing";
-    app.hidden = name !== "app";
-    try { localStorage.setItem("studysnap-view", name); } catch (e) { /* ignore */ }
-    window.scrollTo(0, 0);
-  }
-
   function initViews() {
     $all("[data-action='go-app']").forEach(function (el) {
-      el.addEventListener("click", function (e) { e.preventDefault(); showView("app"); });
+      el.addEventListener("click", function (e) { e.preventDefault(); if (window.StudyBrainWorkspace) window.StudyBrainWorkspace.show("home"); window.scrollTo(0, 0); });
     });
-    $all("[data-action='go-landing']").forEach(function (el) {
-      el.addEventListener("click", function (e) { e.preventDefault(); showView("landing"); });
-    });
-    var saved = null;
-    try { saved = localStorage.getItem("studysnap-view"); } catch (e) { /* ignore */ }
-    showView(saved === "app" ? "app" : "landing");
+    $("#quick-add-task").addEventListener("click", openAddTaskModal);
   }
 
   /* ---------- Toast ---------- */
@@ -115,12 +100,12 @@
   /* ---------- Subject chip ---------- */
   function subjectChip(name) {
     var s = MOCK.subjects[name];
-    if (!s) return "";
+    if (!s) return '<span class="chip">' + escapeHtml(name) + "</span>";
     return '<span class="chip" style="color:' + s.color + ';background:' + s.bg + '">' + escapeHtml(name) + "</span>";
   }
 
   function prioBadge(p) {
-    var labels = { high: "High", medium: "Medium", low: "Low" };
+    var labels = { high: "גבוהה", medium: "בינונית", low: "נמוכה" };
     return '<span class="prio prio-' + p + '">' + icon("flag") + labels[p] + "</span>";
   }
 
@@ -139,16 +124,33 @@
     var pct = total ? Math.round((done / total) * 100) : 0;
     $("#progress-fill").style.width = pct + "%";
     $("#progress-bar").setAttribute("aria-valuenow", String(pct));
-    $("#progress-label").textContent = done + " of " + total + " done";
+    $("#progress-label").textContent = done + " מתוך " + total + " הושלמו";
+    window.dispatchEvent(new Event("studybrain-tasks-changed"));
     var left = total - done;
+    var heart = $("#heart-stage");
+    if (heart) {
+      heart.style.setProperty("--heart-fill", pct + "%");
+      heart.setAttribute("aria-valuenow", String(pct));
+      heart.setAttribute("aria-valuetext", done + " מתוך " + total + " מטלות הושלמו");
+      heart.classList.toggle("is-complete", total > 0 && done === total);
+      $("#heart-percent").textContent = pct;
+      $("#heart-done").textContent = done;
+      $("#heart-left").textContent = left;
+      $("#heart-caption").textContent = !total ? "אין מטלות" : done + " מתוך " + total + " מטלות";
+      var next = state.tasks.filter(function (t) { return !t.completed; }).sort(function (a, b) { return (a.due || "9999").localeCompare(b.due || "9999"); })[0];
+      $("#heart-next").textContent = next ? next.title : "אין מטלות פתוחות";
+      $("#open-next-task").disabled = !next;
+      $("#open-next-task").onclick = next ? function () { openTaskModal(next.id); } : null;
+      $("#heart-next-meta").textContent = next ? next.subject + " · " + next.estMinutes + " דקות" : "";
+    }
     var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     var now = new Date();
-    var dateStr = days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate();
+    var dateStr = now.toLocaleDateString("he-IL", {weekday: "long", day: "numeric", month: "long"});
     var todayTask = state.tasks.find(function (t) { return t.due === "Today" && !t.completed; });
     var urgentNote = todayTask ? " · " + todayTask.title + " is due today" : "";
     $("#greeting-sub").textContent =
-      dateStr + " · " + (left === 0 ? "All caught up 🎉" : left + " task" + (left === 1 ? "" : "s") + " left" + urgentNote);
+      dateStr + " · " + (left === 0 ? "אין מטלות פתוחות" : left + " מטלות בדרך");
   }
 
   function renderTasks() {
@@ -157,7 +159,7 @@
     if (!tasks.length) {
       list.innerHTML =
         '<li class="empty-state">' + icon("check-circle") +
-        "<p>Nothing here — " + (state.filter === "done" ? "no finished tasks yet." : "you're all caught up!") + "</p></li>";
+        "<p>" + (state.filter === "done" ? "המטלות שהשלמת יופיעו כאן." : "הכול פנוי. אפשר להוסיף את המטלה הבאה.") + "</p></li>";
       renderProgress();
       return;
     }
@@ -192,7 +194,6 @@
     if (!t) return;
     t.completed = !t.completed;
     if (t.completed) {
-      t.due = "Done";
       t.subtasks.forEach(function (s) { s.done = true; });
       toast("Nice! \u201c" + t.title + "\u201d checked off", "check-circle");
     }
@@ -221,7 +222,7 @@
     renderTasks();
   }
 
-  /* ---------- Add task modal ---------- */
+  /* ---------- הוספת מטלה modal ---------- */
   function resolveDueDate(due) {
     var now = new Date();
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -246,48 +247,44 @@
 
     $("#modal-root").innerHTML =
       '<div class="modal-overlay" id="modal-overlay">' +
-        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-modal-title">' +
+        '<div class="modal" dir="rtl" role="dialog" aria-modal="true" aria-labelledby="add-modal-title">' +
           '<div class="modal-header">' +
-            '<h2 id="add-modal-title">Add a task</h2>' +
+            '<h2 id="add-modal-title">מטלה חדשה</h2>' +
             '<button class="icon-btn" type="button" id="modal-close" aria-label="Close">' + icon("x") + "</button>" +
           "</div>" +
           '<div class="modal-body">' +
             '<div class="form-group">' +
-              '<label class="form-label" for="at-title">Task title</label>' +
-              '<input class="form-input" type="text" id="at-title" placeholder="e.g. Chapter 3 reading" autocomplete="off" />' +
+              '<label class="form-label" for="at-title">שם המטלה</label>' +
+              '<input class="form-input" type="text" id="at-title" placeholder="למשל: תרגיל 2 באלגברה" autocomplete="off" />' +
             "</div>" +
             '<div class="form-row">' +
               '<div class="form-group">' +
-                '<label class="form-label" for="at-subject">Subject</label>' +
-                '<select class="form-select" id="at-subject">' +
-                  subjects.map(function (s) { return '<option>' + escapeHtml(s) + "</option>"; }).join("") +
-                "</select>" +
+                '<label class="form-label" for="at-subject">קורס</label>' +
+                '<input class="form-input" id="at-subject" dir="auto" placeholder="שם הקורס" />' +
               "</div>" +
               '<div class="form-group">' +
-                '<label class="form-label" for="at-priority">Priority</label>' +
+                '<label class="form-label" for="at-priority">עדיפות</label>' +
                 '<select class="form-select" id="at-priority">' +
-                  '<option value="high">High</option>' +
-                  '<option value="medium" selected>Medium</option>' +
-                  '<option value="low">Low</option>' +
+                  '<option value="high">גבוהה</option>' +
+                  '<option value="medium" selected>בינונית</option>' +
+                  '<option value="low">נמוכה</option>' +
                 "</select>" +
               "</div>" +
             "</div>" +
             '<div class="form-row">' +
               '<div class="form-group">' +
-                '<label class="form-label" for="at-due">Due</label>' +
-                '<select class="form-select" id="at-due">' +
-                  dueOpts.map(function (d) { return '<option>' + escapeHtml(d) + "</option>"; }).join("") +
-                "</select>" +
+                '<label class="form-label" for="at-due">להגשה עד</label>' +
+                '<input class="form-input" type="date" id="at-due" />' +
               "</div>" +
               '<div class="form-group">' +
-                '<label class="form-label" for="at-mins">Est. minutes</label>' +
+                '<label class="form-label" for="at-mins">זמן משוער בדקות</label>' +
                 '<input class="form-input" type="number" id="at-mins" min="5" max="300" step="5" value="30" />' +
               "</div>" +
             "</div>" +
           "</div>" +
           '<div class="modal-footer">' +
-            '<button class="btn btn-ghost" type="button" id="modal-cancel">Cancel</button>' +
-            '<button class="btn btn-primary" type="button" id="modal-save">' + icon("plus") + " Add task</button>" +
+            '<button class="btn btn-ghost" type="button" id="modal-cancel">ביטול</button>' +
+            '<button class="btn btn-primary" type="button" id="modal-save">' + icon("plus") + " הוספת מטלה</button>" +
           "</div>" +
         "</div>" +
       "</div>";
@@ -307,17 +304,17 @@
         return;
       }
       titleEl.classList.remove("invalid");
-      var due = $("#at-due").value;
+      var due = $("#at-due").value || "No deadline";
       var newTask = {
         id: "m" + Date.now(),
         title: title,
-        subject: $("#at-subject").value,
+        subject: $("#at-subject").value.trim() || "General",
         due: due,
         dueDate: resolveDueDate(due),
         priority: $("#at-priority").value,
-        estMinutes: Math.max(5, parseInt($("#at-mins").value, 10) || 30),
+        estMinutes: Math.min(300, Math.max(5, parseInt($("#at-mins").value, 10) || 30)),
         completed: false,
-        source: "Added manually",
+        source: $("#modal-save").dataset.source || "Added manually",
         description: "",
         subtasks: []
       };
@@ -350,7 +347,7 @@
 
     $("#modal-root").innerHTML =
       '<div class="modal-overlay" id="modal-overlay">' +
-        '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">' +
+        '<div class="modal" dir="rtl" role="dialog" aria-modal="true" aria-labelledby="modal-title">' +
           '<div class="modal-header">' +
             '<h2 id="modal-title">' + escapeHtml(t.title) + "</h2>" +
             '<button class="icon-btn" type="button" id="modal-close" aria-label="Close task details">' + icon("x") + "</button>" +
@@ -359,18 +356,17 @@
             '<div class="modal-tags">' + subjectChip(t.subject) + prioBadge(t.priority) + "</div>" +
             '<p class="modal-desc">' + escapeHtml(t.description) + "</p>" +
             '<div class="modal-facts">' +
-              '<div class="fact">Due<strong>' + escapeHtml(t.due) + " · " + escapeHtml(t.dueDate) + "</strong></div>" +
-              '<div class="fact">Estimated<strong>' + t.estMinutes + " min</strong></div>" +
-              '<div class="fact">Source<strong>' + escapeHtml(t.source) + "</strong></div>" +
+              '<div class="fact">להגשה עד<strong>' + escapeHtml(t.due) + " · " + escapeHtml(t.dueDate) + "</strong></div>" +
+              '<div class="fact">זמן משוער<strong>' + t.estMinutes + " min</strong></div>" +
+              '<div class="fact">מקור<strong>' + escapeHtml(t.source) + "</strong></div>" +
             "</div>" +
-            '<h3 class="subtasks-title">Subtasks</h3>' +
+            (t.subtasks.length ? '<h3 class="subtasks-title">שלבים במטלה</h3>' : '') +
             subtasksHtml +
+            '<section id="task-focus" class="task-focus" aria-label="טיימר למטלה"></section>' +
           "</div>" +
           '<div class="modal-footer">' +
-            (MOCK.aiExplanations[id] ? '<button class="btn btn-ghost" type="button" id="modal-ai">' + icon("sparkles") + " AI explanation</button>" : "") +
-            '<button class="btn btn-accent" type="button" id="modal-focus">' + icon("timer") + " Start focus session</button>" +
             '<button class="btn ' + (t.completed ? "btn-ghost" : "btn-primary") + '" type="button" id="modal-complete">' +
-              icon("check") + (t.completed ? " Mark as not done" : " Mark complete") +
+              icon("check") + (t.completed ? " החזרה לביצוע" : " סימון כהושלם") +
             "</button>" +
           "</div>" +
         "</div>" +
@@ -383,11 +379,7 @@
       toggleTask(id);
       closeModal();
     });
-    $("#modal-focus").addEventListener("click", function () {
-      closeModal();
-      startFocusSession();
-      toast("Focus session started for \u201c" + t.title + "\u201d", "timer");
-    });
+    window.StudyBrainTimer.mount($("#task-focus"), t);
     var aiBtn = $("#modal-ai");
     if (aiBtn) {
       aiBtn.addEventListener("click", function () {
@@ -415,7 +407,7 @@
     if (e.key === "Escape") closeModal();
     if (e.key === "Tab") {
       // simple focus trap
-      var focusables = $all(".modal button", $("#modal-root"));
+      var focusables = $all(".modal button, .modal input, .modal select, .modal textarea", $("#modal-root"));
       if (!focusables.length) return;
       var first = focusables[0];
       var last = focusables[focusables.length - 1];
@@ -527,23 +519,25 @@
 
   /* ---------- Study plan ---------- */
   function buildPlan() {
-    var POMO = 25;
-    var BRK = 5;
+    var POMO = 50;
+    var BRK = 10;
     var RANK = { high: 0, medium: 1, low: 2 };
 
     var pending = state.tasks.filter(function (t) { return !t.completed; });
     if (!pending.length) {
       return {
-        headline: "All done!",
-        summary: "Every task is checked off. You've earned the free time.",
+        headline: "הכול הושלם!",
+        summary: "כל המטלות מאחוריך. זה הזמן לנשום.",
         blocks: [],
-        reasons: ["All tasks completed — nothing left to plan."]
+        reasons: ["כשתתווסף מטלה, תוכנית הלמידה תופיע כאן."]
       };
     }
 
     var ordered = pending.slice().sort(function (a, b) {
-      var aT = a.due === "Today" ? 0 : 1, bT = b.due === "Today" ? 0 : 1;
-      if (aT !== bT) return aT - bT;
+      var today = new Date().toLocaleDateString("en-CA");
+      var aT = a.due === "Today" ? today : (/^\d{4}-\d{2}-\d{2}$/.test(a.due) ? a.due : "9999");
+      var bT = b.due === "Today" ? today : (/^\d{4}-\d{2}-\d{2}$/.test(b.due) ? b.due : "9999");
+      if (aT !== bT) return aT.localeCompare(bT);
       var ap = RANK[a.priority] !== undefined ? RANK[a.priority] : 1;
       var bp = RANK[b.priority] !== undefined ? RANK[b.priority] : 1;
       if (ap !== bp) return ap - bp;
@@ -570,7 +564,7 @@
         part++;
         var mins = Math.min(POMO, rem);
         var label = parts > 1 ? task.title + " (" + part + "/" + parts + ")" : task.title;
-        blocks.push({ time: fmt(cursor), title: label, subject: task.subject, minutes: mins, kind: "focus" });
+        blocks.push({ time: fmt(cursor), title: label, taskId: task.id, subject: task.subject, minutes: mins, kind: "focus" });
         cursor += mins;
         rem -= mins;
         var isLast = rem <= 0 && ti === ordered.length - 1;
@@ -591,7 +585,7 @@
     if (todayTasks.length) reasons.push(todayTasks[0].title + " is due today — it leads the plan");
     var highPri = ordered.filter(function (t) { return t.priority === "high" && t.due !== "Today"; });
     if (highPri.length) reasons.push("High-priority tasks come next for your freshest focus");
-    if (focusCount > 1) reasons.push("25-minute blocks with 5-minute breaks keep your energy up");
+    if (focusCount > 1) reasons.push("50-minute blocks with 10-minute breaks keep your energy up");
 
     var tod = now.getHours() >= 18 ? "tonight" : now.getHours() >= 12 ? "this afternoon" : "this morning";
     return {
@@ -612,7 +606,6 @@
       area.innerHTML =
         '<div class="plan-summary"><strong>' + escapeHtml(plan.headline) + "</strong><br />" + escapeHtml(plan.summary) + "</div>" +
         '<ul class="plan-reasons"><li>' + icon("check-circle") + escapeHtml(plan.reasons[0]) + "</li></ul>";
-      if (window.StudySnapTimer && window.StudySnapTimer.reload) window.StudySnapTimer.reload([]);
       return;
     }
 
@@ -636,23 +629,12 @@
       '<ul class="plan-reasons">' +
         plan.reasons.map(function (r) { return "<li>" + icon("lightbulb") + escapeHtml(r) + "</li>"; }).join("") +
       "</ul>" +
-      '<button class="btn btn-accent" type="button" id="plan-start">' + icon("play") + " Start first block</button>";
+      '<button class="btn btn-accent" type="button" id="plan-start">' + icon("play") + " פתיחת המטלה הראשונה</button>";
 
-    if (window.StudySnapTimer && window.StudySnapTimer.reload) window.StudySnapTimer.reload(plan.blocks);
 
     $("#plan-start").addEventListener("click", function () {
-      startFocusSession();
-      toast("First block started: " + plan.blocks[0].title, "timer");
+      openTaskModal(plan.blocks[0].taskId);
     });
-  }
-
-  /* ---------- Pomodoro timer ----------
-     The timer itself lives in js/pomodoro.js (plan-driven session queue);
-     it exposes window.StudySnapTimer for the modal and plan card. */
-  function startFocusSession() {
-    if (window.StudySnapTimer) window.StudySnapTimer.start();
-    var section = $("#pomodoro");
-    if (section) section.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   /* ---------- AI explanation ---------- */
@@ -740,6 +722,10 @@
     });
   }
 
+  window.StudyBrainTasks = {
+    list: function () { return state.tasks.map(function (t) { return {id:t.id, title:t.title, subject:t.subject, due:t.due, completed:t.completed}; }); },
+    open: openTaskModal
+  };
   /* ---------- Boot ---------- */
   document.addEventListener("DOMContentLoaded", function () {
     loadSavedTasks();
@@ -747,10 +733,32 @@
     initTheme();
     initViews();
     initChecklist();
-    initUpload();
+    window.addEventListener("studysnap-file-task", function (event) {
+      openAddTaskModal();
+      $("#at-title").value = event.detail.name;
+      $("#at-subject").value = event.detail.course;
+      $("#modal-save").dataset.source = event.detail.name;
+    });
+    document.getElementById("export-tasks").addEventListener("click", function () {
+      var blob = new Blob([JSON.stringify({exportedAt: new Date().toISOString(), tasks: state.tasks}, null, 2)], {type: "application/json"});
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a"); link.href = url; link.download = "studybrain-tasks.json"; link.click();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    });
+    document.getElementById("import-tasks").addEventListener("change", async function (event) {
+      var input=event.target, file=input.files[0], status=document.getElementById("import-status");
+      if (!file) return;
+      try {
+        if(file.size>2*1024*1024) throw Error("הגיבוי גדול מדי (עד 2MB).");
+        var incoming=window.StudyBrainBackup.parse(JSON.parse(await file.text()));
+        var merged=window.StudyBrainBackup.merge(state.tasks,incoming);
+        localStorage.setItem(TASKS_KEY,JSON.stringify({tasks:merged.tasks,detectedAdded:state.detectedAdded}));
+        state.tasks=merged.tasks;renderTasks();renderPlan();
+        status.textContent="נוספו "+merged.added+" מטלות. מטלות קיימות נשמרו ללא שינוי.";
+      } catch(e) { status.textContent="הייבוא נכשל. "+e.message; }
+      input.value="";
+    });
     renderPlan();
-    renderAI();
-    renderResourceFilters();
-    renderResources();
+
   });
 })();

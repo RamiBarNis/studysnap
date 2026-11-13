@@ -1,0 +1,10 @@
+.*
+!.gitignore
+!vercel.json
+study-files
+output
+tests
+server.py
+planner.py
+requirements.txt
+start.command
