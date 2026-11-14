@@ -171,11 +171,6 @@
       $("#heart-done").textContent = done;
       $("#heart-left").textContent = left;
       $("#heart-caption").textContent = !total ? "אין מטלות" : done + " מתוך " + total + " מטלות";
-      var next = included.filter(function (t) { return !t.completed; }).sort(byDue)[0];
-      $("#heart-next").textContent = next ? next.title : "אין מטלות פתוחות";
-      $("#open-next-task").disabled = !next;
-      $("#open-next-task").onclick = next ? function () { openTaskModal(next.id); } : null;
-      $("#heart-next-meta").textContent = next ? next.subject : "";
     }
     var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
