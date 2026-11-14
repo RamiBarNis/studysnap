@@ -296,3 +296,26 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
 @media (prefers-reduced-motion: reduce) {
   .focus-running .hourglass, .hourglass-turn.turning { animation: none; }
 }
+
+.home-deadlines { width: min(100%, 660px); margin-top: 1.5rem; text-align: start; }
+.home-deadlines-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.home-deadlines-head h2 { margin: 0; font-size: 1.25rem; }
+#home-deadline-list { list-style: none; padding: 0; margin: .85rem 0 0; display: grid; gap: .65rem; }
+.deadline-card {
+  --tone: #53d2a8;
+  width: 100%; text-align: start; color: inherit; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--tone) 58%, #24314b);
+  border-inline-start-width: 3px; border-radius: 16px; padding: .9rem 1rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tone) 15%, #132039), #111d32 76%);
+  display: grid; gap: .35rem; font: inherit;
+}
+.deadline-card strong::before { content: ""; display: inline-block; width: .55rem; height: .55rem; margin-inline-end: .6rem; border-radius: 50%; background: var(--tone); box-shadow: 0 0 12px var(--tone); }
+.deadline-card > span { color: #c7d6ec; font-size: .875rem; }
+.deadline-card:focus-visible, .deadline-card:hover { outline: 2px solid var(--tone); outline-offset: 2px; }
+.deadline-blue { --tone: #62a6ff; }
+.deadline-violet { --tone: #ba92ff; }
+.deadline-cyan { --tone: #50d6e4; }
+.deadline-meta { display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.task-sort { display: flex; align-items: center; gap: .6rem; margin-block: .7rem; }
+.task-sort select { width: auto; max-width: 100%; }
+.task-course-heading h3 { margin: .75rem .3rem .15rem; font-size: .95rem; color: #c7d6ec; }

@@ -124,8 +124,35 @@
     });
   }
 
+  function dueKey(task) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(task.due) ? task.due : "9999";
+  }
+
+  function byDue(a, b) {
+    return dueKey(a).localeCompare(dueKey(b)) || a.title.localeCompare(b.title, "he");
+  }
+
+  function renderUpcoming(tasks) {
+    var list = $("#home-deadline-list");
+    var today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Jerusalem"}).format(new Date());
+    var upcoming = tasks.filter(function (task) {
+      return !task.completed && dueKey(task) !== "9999" && task.due >= today;
+    }).sort(byDue).slice(0, 4);
+    var colors = ["mint", "blue", "violet", "cyan"];
+    list.innerHTML = upcoming.map(function (task, index) {
+      var days = Math.round((Date.parse(task.due) - Date.parse(today)) / 86400000);
+      var relative = days === 0 ? "היום" : days === 1 ? "מחר" : "בעוד " + days + " ימים";
+      return '<li><button type="button" class="deadline-card deadline-' + colors[index] +
+        '" data-open="' + escapeHtml(task.id) + '"><strong>' + escapeHtml(task.title) +
+        '</strong><span>' + escapeHtml(task.subject) + '</span><span class="deadline-meta">' +
+        '<time datetime="' + task.due + '" dir="ltr">' + task.due.split("-").reverse().join(".") +
+        '</time><span>' + relative + '</span></span></button></li>';
+    }).join("") || '<li class="card-sub">אין הגשות קרובות כרגע.</li>';
+  }
+
   function renderProgress() {
     var included = state.tasks.filter(function (t) { return !t.archived; });
+    renderUpcoming(included);
     var done = included.filter(function (t) { return t.completed; }).length;
     var total = included.length;
     var pct = total ? Math.round((done / total) * 100) : 0;
@@ -144,7 +171,7 @@
       $("#heart-done").textContent = done;
       $("#heart-left").textContent = left;
       $("#heart-caption").textContent = !total ? "אין מטלות" : done + " מתוך " + total + " מטלות";
-      var next = included.filter(function (t) { return !t.completed; }).sort(function (a, b) { return (a.due || "9999").localeCompare(b.due || "9999"); })[0];
+      var next = included.filter(function (t) { return !t.completed; }).sort(byDue)[0];
       $("#heart-next").textContent = next ? next.title : "אין מטלות פתוחות";
       $("#open-next-task").disabled = !next;
       $("#open-next-task").onclick = next ? function () { openTaskModal(next.id); } : null;
@@ -162,7 +189,10 @@
 
   function renderTasks() {
     var list = $("#task-list");
-    var tasks = visibleTasks();
+    var bySubject = $("#task-sort").value === "subject";
+    var tasks = visibleTasks().sort(function (a, b) {
+      return (bySubject ? a.subject.localeCompare(b.subject, "he") : 0) || byDue(a, b);
+    });
     if (!tasks.length) {
       list.innerHTML =
         '<li class="empty-state">' + icon("check-circle") +
@@ -170,9 +200,11 @@
       renderProgress();
       return;
     }
-    list.innerHTML = tasks.map(function (t) {
+    list.innerHTML = tasks.map(function (t, i) {
       var doneSub = t.subtasks.filter(function (s) { return s.done; }).length;
       return (
+        (bySubject && (!i || tasks[i - 1].subject !== t.subject)
+          ? '<li class="task-course-heading"><h3>' + escapeHtml(t.subject) + '</h3></li>' : "") +
         '<li class="task-item' + (t.completed ? " done" : "") + '" data-id="' + escapeHtml(t.id) + '">' +
           '<button class="task-check" type="button" data-toggle="' + escapeHtml(t.id) + '" role="checkbox" aria-checked="' + t.completed + '" aria-label="Mark “' + escapeHtml(t.title) + '” as ' + (t.completed ? "not done" : "done") + '">' +
             icon("check") +
@@ -228,6 +260,20 @@
       });
     });
     $("#add-task-btn").addEventListener("click", openAddTaskModal);
+    var sort = $("#task-sort");
+    try { if (localStorage.getItem("studybrain-task-sort") === "subject") sort.value = "subject"; } catch (_) {}
+    sort.addEventListener("change", function () {
+      try { localStorage.setItem("studybrain-task-sort", sort.value); } catch (_) {}
+      renderTasks();
+    });
+    $("#home-deadline-list").addEventListener("click", function (event) {
+      var card = event.target.closest("[data-open]");
+      if (card) openTaskModal(card.dataset.open);
+    });
+    $("#show-all-tasks").addEventListener("click", function () {
+      $("#tab-tasks").click();
+      $("#panel-tasks").scrollIntoView({block: "start"});
+    });
     renderTasks();
   }
 
