@@ -57,11 +57,16 @@
       }));card.append(actions);list.append(card);
     });
   }
+  function taskCalendarLabel(task) {
+    var match = task.title.match(/^(מטלת|מטלה|תרגיל|בוחן)(?: בית| הגשה)?\s+(\d+)/);
+    var label = match ? (match[1] === 'בוחן' ? 'בוחן ' : 'מטלה ') + match[2] : task.title;
+    return task.subject ? task.subject + ' - ' + label : label;
+  }
   function renderCalendar() {
     var grid=$('calendar-grid');grid.replaceChildren();
     $('calendar-title').textContent=month.toLocaleDateString('he-IL',{month:'long',year:'numeric'});
     ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].forEach(function(day){grid.append(node('div',day,'calendar-weekday'));});
-    var items=tasks().filter(function(t){return validDate(t.due);}).map(function(t){return {date:t.due,title:t.title,kind:'task',completed:t.completed,open:function(){window.StudyBrainTasks.open(t.id);}};});
+    var items=tasks().filter(function(t){return validDate(t.due);}).map(function(t){return {date:t.due,title:taskCalendarLabel(t),detail:t.title,kind:'task',completed:t.completed,open:function(){window.StudyBrainTasks.open(t.id);}};});
     exams.forEach(function(e){items.push({date:e.date,title:e.title,kind:'exam',open:function(){openExam(e);}});});
     var first=new Date(month.getFullYear(),month.getMonth(),1,12);
     var days=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
@@ -70,7 +75,7 @@
     for(var day=1;day<=days;day++){
       var date=dateKey(new Date(month.getFullYear(),month.getMonth(),day,12));
       var cell=node('div',undefined,'calendar-day'+(date===today?' is-today':''));cell.append(node('span',String(day),'day-number'));
-      items.filter(function(item){return item.date===date;}).forEach(function(item){var el=button(item.title,item.open,'calendar-event '+item.kind+(item.completed?' completed':''));el.title=item.title;cell.append(el);});grid.append(cell);
+      items.filter(function(item){return item.date===date;}).forEach(function(item){var el=button(item.title,item.open,'calendar-event '+item.kind+(item.completed?' completed':''));el.title=item.detail||item.title;cell.append(el);});grid.append(cell);
     }
     var undated=tasks().filter(function(t){return !validDate(t.due)&&!t.completed;}).length;
     $('calendar-note').textContent=undated?undated+' מטלות ללא תאריך הגשה מדויק אינן מוצגות בלוח.':'';

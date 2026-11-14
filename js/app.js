@@ -555,123 +555,25 @@
   }
 
   /* ---------- Study plan ---------- */
-  function buildPlan() {
-    var POMO = 50;
-    var BRK = 10;
-    var RANK = { high: 0, medium: 1, low: 2 };
-
-    var pending = state.tasks.filter(function (t) { return !t.completed; });
-    if (!pending.length) {
-      return {
-        headline: "הכול הושלם!",
-        summary: "כל המטלות מאחוריך. זה הזמן לנשום.",
-        blocks: [],
-        reasons: ["כשתתווסף מטלה, תוכנית הלמידה תופיע כאן."]
-      };
-    }
-
-    var ordered = pending.slice().sort(function (a, b) {
-      var today = new Date().toLocaleDateString("en-CA");
-      var aT = a.due === "Today" ? today : (/^\d{4}-\d{2}-\d{2}$/.test(a.due) ? a.due : "9999");
-      var bT = b.due === "Today" ? today : (/^\d{4}-\d{2}-\d{2}$/.test(b.due) ? b.due : "9999");
-      if (aT !== bT) return aT.localeCompare(bT);
-      var ap = RANK[a.priority] !== undefined ? RANK[a.priority] : 1;
-      var bp = RANK[b.priority] !== undefined ? RANK[b.priority] : 1;
-      if (ap !== bp) return ap - bp;
-      return a.estMinutes - b.estMinutes;
-    });
-
-    var now = new Date();
-    var cursor = now.getHours() * 60 + now.getMinutes();
-    cursor = Math.ceil(cursor / 5) * 5;
-
-    function fmt(min) {
-      var hh = Math.floor(min / 60) % 24;
-      var mm = min % 60;
-      var h = hh % 12 || 12;
-      return String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0") + (min >= 1440 ? " (+" + Math.floor(min/1440) + " ימים)" : "");
-    }
-
-    var blocks = [];
-    ordered.forEach(function (task, ti) {
-      var rem = task.estMinutes;
-      var parts = Math.ceil(rem / POMO);
-      var part = 0;
-      while (rem > 0) {
-        part++;
-        var mins = Math.min(POMO, rem);
-        var label = parts > 1 ? task.title + " (" + part + "/" + parts + ")" : task.title;
-        blocks.push({ time: fmt(cursor), title: label, taskId: task.id, subject: task.subject, minutes: mins, kind: "focus" });
-        cursor += mins;
-        rem -= mins;
-        var isLast = rem <= 0 && ti === ordered.length - 1;
-        if (!isLast) {
-          blocks.push({ time: fmt(cursor), title: "הפסקה", subject: null, minutes: BRK, kind: "break" });
-          cursor += BRK;
-        }
-      }
-    });
-
-    var focusCount = blocks.filter(function (b) { return b.kind === "focus"; }).length;
-    var totalMin = blocks.reduce(function (s, b) { return s + b.minutes; }, 0);
-    var h = Math.floor(totalMin / 60), m = totalMin % 60;
-    var dur = h > 0 ? h + " שעות" + (m ? " ו־" + m + " דקות" : "") : m + " דקות";
-
-    var reasons = [];
-    var todayTasks = ordered.filter(function (t) { return t.due === "Today"; });
-    if (todayTasks.length) reasons.push(todayTasks[0].title + " is due today — it leads the plan");
-    var highPri = ordered.filter(function (t) { return t.priority === "high" && t.due !== "Today"; });
-    if (highPri.length) reasons.push("באותו מועד הגשה, מטלות בעדיפות גבוהה מופיעות קודם");
-    if (focusCount > 1) reasons.push("מקטעי עבודה של עד 50 דקות והפסקות של 10 דקות");
-
-    var tod = now.getHours() >= 18 ? "tonight" : now.getHours() >= 12 ? "this afternoon" : "this morning";
-    return {
-      headline: "סדר העבודה לפי מועדי ההגשה",
-      summary: dur + " בסך הכול, כולל הפסקות. זו הערכה לכל המטלות הפתוחות, לא יעד להיום.",
-      blocks: blocks,
-      reasons: reasons
-    };
-  }
-
   function renderPlan() {
-    var plan = buildPlan();
-    var kindIcon = { focus: "pencil", break: "coffee" };
-    var kindColor = { focus: "var(--primary)", break: "var(--success)" };
+    var active = state.tasks.find(function (task) {
+      return task.id === window.StudyBrainTimer.runningId();
+    });
     var area = $("#plan-area");
-
-    if (!plan.blocks.length) {
-      area.innerHTML =
-        '<div class="plan-summary"><strong>' + escapeHtml(plan.headline) + "</strong><br />" + escapeHtml(plan.summary) + "</div>" +
-        '<ul class="plan-reasons"><li>' + icon("check-circle") + escapeHtml(plan.reasons[0]) + "</li></ul>";
+    if (!active) {
+      area.textContent = "פתח מטלה ולחץ על ״התחל״ כדי להתחיל סשן מיקוד של 50 דקות.";
       return;
     }
+    area.innerHTML = '<div class="plan-summary"><strong>' + escapeHtml(active.title) +
+      '</strong><p id="active-focus-time" dir="ltr"></p>' +
+      '<button type="button" class="btn btn-ghost" id="plan-start">פתיחת המטלה</button></div>';
+    $("#plan-start").onclick = function () { openTaskModal(active.id); };
+    updateFocusTime();
+  }
 
-    area.innerHTML =
-      '<div class="plan-summary"><strong>' + escapeHtml(plan.headline) + "</strong><br />" + escapeHtml(plan.summary) + "</div>" +
-      '<ul class="plan-list">' +
-        plan.blocks.map(function (b) {
-          return (
-            '<li class="plan-block kind-' + b.kind + '">' +
-              '<span class="plan-time">' + escapeHtml(b.time) + "</span>" +
-              '<div class="plan-pill">' +
-                '<span style="color:' + (kindColor[b.kind] || "var(--primary)") + ';display:inline-flex">' + icon(kindIcon[b.kind] || "pencil") + "</span>" +
-                '<span class="plan-pill-label">' + escapeHtml(b.title) + "</span>" +
-                (b.subject ? subjectChip(b.subject) : "") +
-                '<span class="plan-pill-mins">' + b.minutes + " דק׳</span>" +
-              "</div>" +
-            "</li>"
-          );
-        }).join("") +
-      "</ul>" +
-      '<ul class="plan-reasons">' +
-        plan.reasons.map(function (r) { return "<li>" + icon("lightbulb") + escapeHtml(r) + "</li>"; }).join("") +
-      "</ul>" +
-      '<button class="btn btn-accent" type="button" id="plan-start">' + icon("play") + " פתיחת המטלה הראשונה</button>";
-
-
-    $("#plan-start").addEventListener("click", function () {
-      openTaskModal(plan.blocks[0].taskId);
-    });
+  function updateFocusTime() {
+    var remaining = $("#active-focus-time");
+    if (remaining) remaining.textContent = window.StudyBrainTimer.remainingLabel();
   }
 
   /* ---------- AI explanation ---------- */
@@ -765,6 +667,8 @@
   };
   /* ---------- Boot ---------- */
   document.addEventListener("DOMContentLoaded", function () {
+    window.addEventListener("studybrain-focus-changed", renderPlan);
+    window.addEventListener("studybrain-focus-tick", updateFocusTime);
     loadSavedTasks();
     hydrateIcons(document);
     initTheme();

@@ -48,9 +48,15 @@
   try { storage = root.localStorage; } catch (_) { storage = {getItem: function () {}, setItem: function () {throw Error("Storage unavailable");}}; }
   var clock = createClock(storage), mounted = null, baseTitle = document.title;
   function format(ms) { var seconds = Math.ceil(ms / 1000); return String(Math.floor(seconds / 60)).padStart(2,"0") + ":" + String(seconds % 60).padStart(2,"0"); }
+  var lastRunning;
   function render() {
     var running = clock.runningId();
     document.title = running ? format(clock.get(running).remaining) + " · מיקוד — StudyBrain" : baseTitle;
+    if (lastRunning !== running) {
+      lastRunning = running;
+      root.dispatchEvent(new Event("studybrain-focus-changed"));
+    }
+    if (running) root.dispatchEvent(new Event("studybrain-focus-tick"));
     if (!mounted || !document.contains(mounted.el)) return;
     var value = clock.get(mounted.id), el = mounted.el;
     el.querySelector(".task-timer-time").textContent = format(value.remaining);
@@ -58,6 +64,11 @@
     el.querySelector(".task-timer-toggle").textContent = value.running ? "השהיה" : value.remaining === 0 ? "התחל מחדש · 50 דקות" : value.remaining < DURATION ? "המשך" : "התחל · 50 דקות";
   }
   root.StudyBrainTimer = {
+    runningId: clock.runningId,
+    remainingLabel: function () {
+      var id = clock.runningId();
+      return id ? format(clock.get(id).remaining) : "";
+    },
     pause: function(id) { var ok=clock.pause(id); render(); return ok; },
     mount: function (el, task) {
       mounted = {el: el, id: task.id};
