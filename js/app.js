@@ -116,6 +116,8 @@
   /* ---------- Checklist ---------- */
   function visibleTasks() {
     return state.tasks.filter(function (t) {
+      if (state.filter === "archived") return !!t.archived;
+      if (t.archived) return false;
       if (state.filter === "todo") return !t.completed;
       if (state.filter === "done") return t.completed;
       return true;
@@ -123,8 +125,9 @@
   }
 
   function renderProgress() {
-    var done = state.tasks.filter(function (t) { return t.completed; }).length;
-    var total = state.tasks.length;
+    var included = state.tasks.filter(function (t) { return !t.archived; });
+    var done = included.filter(function (t) { return t.completed; }).length;
+    var total = included.length;
     var pct = total ? Math.round((done / total) * 100) : 0;
     $("#progress-fill").style.width = pct + "%";
     $("#progress-bar").setAttribute("aria-valuenow", String(pct));
@@ -141,7 +144,7 @@
       $("#heart-done").textContent = done;
       $("#heart-left").textContent = left;
       $("#heart-caption").textContent = !total ? "אין מטלות" : done + " מתוך " + total + " מטלות";
-      var next = state.tasks.filter(function (t) { return !t.completed; }).sort(function (a, b) { return (a.due || "9999").localeCompare(b.due || "9999"); })[0];
+      var next = included.filter(function (t) { return !t.completed; }).sort(function (a, b) { return (a.due || "9999").localeCompare(b.due || "9999"); })[0];
       $("#heart-next").textContent = next ? next.title : "אין מטלות פתוחות";
       $("#open-next-task").disabled = !next;
       $("#open-next-task").onclick = next ? function () { openTaskModal(next.id); } : null;
@@ -163,7 +166,7 @@
     if (!tasks.length) {
       list.innerHTML =
         '<li class="empty-state">' + icon("check-circle") +
-        "<p>" + (state.filter === "done" ? "המטלות שהשלמת יופיעו כאן." : "הכול פנוי. אפשר להוסיף את המטלה הבאה.") + "</p></li>";
+        "<p>" + (state.filter === "archived" ? "אין מטלות בארכיון." : state.filter === "done" ? "המטלות שהשלמת יופיעו כאן." : "הכול פנוי. אפשר להוסיף את המטלה הבאה.") + "</p></li>";
       renderProgress();
       return;
     }
@@ -385,6 +388,7 @@
           "</div>" +
           '<div class="modal-footer">' +
             '<button class="btn btn-ghost" type="button" id="modal-edit">עריכה</button>' +
+            '<button class="btn btn-ghost" type="button" id="modal-archive">' + (t.archived ? "שחזור מהארכיון" : "העברה לארכיון") + '</button>' +
             '<button class="btn btn-ghost" type="button" id="modal-delete">מחיקה</button>' +
             '<button class="btn btn-ghost" type="button" id="modal-delete-confirm" hidden>אישור מחיקה</button>' +
             '<button class="btn ' + (t.completed ? "btn-ghost" : "btn-primary") + '" type="button" id="modal-complete">' +
@@ -401,6 +405,15 @@
       if (toggleTask(id)) closeModal();
     });
     $("#modal-edit").addEventListener("click", function () { openAddTaskModal(null, t); });
+    $("#modal-archive").addEventListener("click", function () {
+      var previous = t.archived;
+      t.archived = !previous;
+      if (!saveTasks()) { t.archived = previous; return; }
+      if (t.archived) window.StudyBrainTimer.pause(id);
+      closeModal();
+      renderTasks();
+      renderPlan();
+    });
     $("#modal-delete").addEventListener("click", function () {
       $("#modal-delete").hidden = true;
       $("#modal-delete-confirm").hidden = false;
@@ -557,7 +570,7 @@
   /* ---------- Study plan ---------- */
   function renderPlan() {
     var active = state.tasks.find(function (task) {
-      return task.id === window.StudyBrainTimer.runningId();
+      return !task.archived && task.id === window.StudyBrainTimer.runningId();
     });
     var area = $("#plan-area");
     if (!active) {
@@ -662,7 +675,7 @@
   }
 
   window.StudyBrainTasks = {
-    list: function () { return state.tasks.map(function (t) { return {id:t.id, title:t.title, subject:t.subject, due:t.due, completed:t.completed}; }); },
+    list: function () { return state.tasks.filter(function (t) { return !t.archived; }).map(function (t) { return {id:t.id, title:t.title, subject:t.subject, due:t.due, completed:t.completed}; }); },
     open: openTaskModal
   };
   /* ---------- Boot ---------- */

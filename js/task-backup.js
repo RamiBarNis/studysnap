@@ -12,7 +12,7 @@
       }
       return {id:t.id.slice(0,160),title:t.title.slice(0,300),subject:str(t.subject,'כללי',200),due:due,dueDate:due,
         priority:['high','medium','low'].includes(t.priority)?t.priority:'medium',estMinutes:Math.max(5,Math.min(300,Number(t.estMinutes)||30)),
-        completed:t.completed===true,source:str(t.source,'ייבוא גיבוי',1000),description:str(t.description,'',10000),
+        completed:t.completed===true,archived:t.archived===true,source:str(t.source,'ייבוא גיבוי',1000),description:str(t.description,'',10000),
         subtasks:Array.isArray(t.subtasks)?t.subtasks.slice(0,100).map(function(s){return {label:str(s && s.label,'',500),done:!!s && s.done===true};}):[]};
     });
   }
