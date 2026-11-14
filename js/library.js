@@ -4,16 +4,55 @@
   var status = document.getElementById("library-status");
   var input = document.getElementById("library-files");
   var list = document.getElementById("library-list");
-  var db;
   input.disabled = true;
   function report(message) { status.textContent = message; }
-  function transaction(mode, action) {
+  function openDatabase() {
     return new Promise(function (resolve, reject) {
-      var tx = db.transaction("files", mode);
-      var request = action(tx.objectStore("files"));
-      tx.oncomplete = function () { resolve(request.result); };
-      tx.onerror = tx.onabort = function () { reject(tx.error || new Error("Storage failed")); };
+      var request = indexedDB.open("studysnap-library", 1);
+      var timedOut = false;
+      var timeout = setTimeout(function () {
+        timedOut = true;
+        reject(new Error("אחסון הקבצים לא הגיב. רענן את האתר ונסה שוב."));
+      }, 8000);
+      request.onupgradeneeded = function () {
+        request.result.createObjectStore("files", {keyPath: "id"});
+      };
+      request.onerror = function () {
+        clearTimeout(timeout);
+        reject(request.error);
+      };
+      request.onsuccess = function () {
+        clearTimeout(timeout);
+        var connection = request.result;
+        connection.onversionchange = function () { connection.close(); };
+        if (timedOut) connection.close();
+        else resolve(connection);
+      };
     });
+  }
+
+  async function transaction(mode, action) {
+    // iOS can close IndexedDB while the browser is in the background.
+    // Open on demand and close after each operation instead of keeping a stale handle.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      var db = await openDatabase();
+      try {
+        var tx;
+        try {
+          tx = db.transaction("files", mode);
+        } catch (error) {
+          if (error.name === "InvalidStateError" && attempt === 0) continue;
+          throw error;
+        }
+        return await new Promise(function (resolve, reject) {
+          var request = action(tx.objectStore("files"));
+          tx.oncomplete = function () { resolve(request.result); };
+          tx.onabort = function () { reject(tx.error || new Error("שמירת הקובץ נקטעה. נסה שוב.")); };
+        });
+      } finally {
+        db.close();
+      }
+    }
   }
   window.StudyBrainAttachments = {
     async add(taskId, file) {
@@ -83,13 +122,7 @@
     report("נשמרו " + saved + " קבצים." + (rejected.length ? " לא נשמרו (סוג, גודל או אחסון): " + rejected.join(", ") : ""));
     try { await render(); } catch (error) { report("לא ניתן לקרוא את הספרייה המקומית."); }
   });
-  try {
-    var request = indexedDB.open("studysnap-library", 1);
-    request.onupgradeneeded = function () { request.result.createObjectStore("files", {keyPath: "id"}); };
-    request.onerror = function () { report("האחסון המקומי אינו זמין. נסה דפדפן רגיל ולא גלישה פרטית."); };
-    request.onsuccess = async function () {
-      db = request.result;
-      try { await render(); input.disabled = false; } catch (error) { report("לא ניתן לטעון את הספרייה."); }
-    };
-  } catch (error) { report("האחסון המקומי אינו זמין בדפדפן הזה."); }
+  render().catch(function () {
+    report("לא ניתן לטעון את הספרייה כרגע. אפשר לנסות שוב.");
+  }).finally(function () { input.disabled = false; });
 })();
