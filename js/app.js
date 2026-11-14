@@ -148,7 +148,7 @@
       $("#heart-next").textContent = next ? next.title : "אין מטלות פתוחות";
       $("#open-next-task").disabled = !next;
       $("#open-next-task").onclick = next ? function () { openTaskModal(next.id); } : null;
-      $("#heart-next-meta").textContent = next ? next.subject + " · " + next.estMinutes + " דקות" : "";
+      $("#heart-next-meta").textContent = next ? next.subject : "";
     }
     var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -182,7 +182,6 @@
             '<div class="task-meta">' +
               subjectChip(t.subject) +
               '<span class="meta-bit' + (t.due === "Today" ? " due-today" : "") + '">' + icon("calendar") + (t.due === "No deadline" ? "ללא מועד הגשה" : "להגשה: " + escapeHtml(t.due)) + "</span>" +
-              '<span class="meta-bit">' + icon("clock") + t.estMinutes + " דקות</span>" +
               prioBadge(t.priority) +
               '<span class="meta-bit">' + icon("list-checks") + doneSub + "/" + t.subtasks.length + "</span>" +
             "</div>" +
@@ -286,10 +285,6 @@
                 '<label class="form-label" for="at-due">להגשה עד</label>' +
                 '<input class="form-input" type="date" id="at-due" />' +
               "</div>" +
-              '<div class="form-group">' +
-                '<label class="form-label" for="at-mins">זמן משוער בדקות</label>' +
-                '<input class="form-input" type="number" id="at-mins" min="5" max="300" step="any" value="30" />' +
-              "</div>" +
             "</div>" +
           "</div>" +
           '<div class="modal-footer">' +
@@ -310,7 +305,6 @@
       $("#at-subject").value = task.subject;
       $("#at-due").value = task.due;
       $("#at-priority").value = task.priority;
-      $("#at-mins").value = task.estMinutes;
     }
 
     $("#modal-save").addEventListener("click", function () {
@@ -322,7 +316,7 @@
         return;
       }
       titleEl.classList.remove("invalid");
-      if (!$("#at-due").reportValidity() || !$("#at-mins").reportValidity()) return;
+      if (!$("#at-due").reportValidity()) return;
       var due = $("#at-due").value || "No deadline";
       var newTask = {
         id: task ? task.id : crypto.randomUUID(),
@@ -331,7 +325,7 @@
         due: due,
         dueDate: resolveDueDate(due),
         priority: $("#at-priority").value,
-        estMinutes: Math.min(300, Math.max(5, Number($("#at-mins").value) || 30)),
+        estMinutes: task ? task.estMinutes : 30,
         completed: task ? task.completed : false,
         source: (task && task.source) || $("#modal-save").dataset.source || "Added manually",
         description: task ? task.description : "",
@@ -379,12 +373,11 @@
             '<p class="modal-desc">' + escapeHtml(t.description) + "</p>" +
             '<div class="modal-facts">' +
               '<div class="fact">להגשה עד<strong>' + (t.due === "No deadline" ? "לא נקבע" : escapeHtml(t.due)) + "</strong></div>" +
-              '<div class="fact">זמן משוער<strong>' + t.estMinutes + " דקות</strong></div>" +
-              '<div class="fact">מקור<strong>' + escapeHtml(t.source) + "</strong></div>" +
+              '<div class="fact">מקור<strong>' + escapeHtml(t.source === "Added manually" ? "הוספה ידנית" : t.source) + "</strong></div>" +
             "</div>" +
             (t.subtasks.length ? '<h3 class="subtasks-title">שלבים במטלה</h3>' : '') +
             subtasksHtml +
-            '<section id="task-attachments" class="task-focus" aria-label="קובצי המטלה"></section>' +
+            '<section id="task-attachments" class="task-documents" aria-label="קובצי המטלה"></section>' +
             '<section id="task-focus" class="task-focus" aria-label="טיימר למטלה"></section>' +
             '<div class="task-actions" role="group" aria-label="פעולות מטלה">' +
             '<button class="btn btn-ghost" type="button" id="modal-edit">עריכה</button>' +
@@ -456,8 +449,9 @@
   }
 
   function mountTaskAttachments(area, id) {
-    area.innerHTML = '<label class="form-label" for="task-pdf">צירוף PDF למטלה</label>' +
-      '<input id="task-pdf" type="file" accept=".pdf,application/pdf">' +
+    area.innerHTML = '<div class="task-documents-head"><h3>' + icon("file-text") + ' קובצי המטלה</h3>' +
+      '<label class="btn btn-ghost btn-sm task-pdf-picker">' + icon("upload") + ' צירוף PDF' +
+      '<input id="task-pdf" type="file" aria-label="צירוף PDF למטלה" accept=".pdf,application/pdf"></label></div>' +
       '<p role="status" class="card-sub"></p><ul></ul>';
     var input = area.querySelector("input");
     var list = area.querySelector("ul");
@@ -466,12 +460,19 @@
     async function render() {
       var files = await attachments.list(id);
       list.replaceChildren();
+      if (!files.length) {
+        var empty = document.createElement("li");
+        empty.className = "card-sub";
+        empty.textContent = "אין קובץ מצורף";
+        list.append(empty);
+      }
       files.forEach(function (file) {
         var row = document.createElement("li");
         var download = document.createElement("button");
         download.type = "button";
-        download.className = "btn btn-ghost btn-sm";
-        download.textContent = "הורדה: " + file.name;
+        download.className = "btn btn-ghost btn-sm task-pdf-download";
+        download.textContent = file.name;
+        download.setAttribute("aria-label", "הורדה: " + file.name);
         download.onclick = function () {
           var url = URL.createObjectURL(file.blob);
           var link = document.createElement("a");

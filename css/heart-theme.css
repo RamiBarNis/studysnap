@@ -233,3 +233,66 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
   box-shadow: 0 4px 12px rgb(4 12 28 / 22%);
 }
 .task-actions .btn[hidden] { display: none; }
+
+.modal-body { scrollbar-width: thin; scrollbar-color: #829dc17a transparent; }
+.modal-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.modal-desc:empty, .task-timer-storage:empty, .task-documents [role="status"]:empty { display: none; }
+
+.task-documents {
+  padding: 14px;
+  border: 1px solid #9db8e440;
+  border-radius: 18px;
+  background: linear-gradient(130deg, #3c52734f, #33446326);
+}
+.task-documents-head, .task-documents li { display: flex; align-items: center; gap: .5rem; }
+.task-documents-head { justify-content: space-between; flex-wrap: wrap; }
+.task-documents h3 { display: flex; align-items: center; gap: .4rem; margin: 0; font-size: .95rem; }
+.task-documents h3 svg, .task-pdf-picker svg { width: 16px; height: 16px; }
+.task-documents ul { list-style: none; padding: 0; margin: .65rem 0 0; }
+.task-documents li + li { margin-top: .35rem; }
+.task-pdf-picker { position: relative; cursor: pointer; }
+.task-pdf-picker input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.task-pdf-picker:focus-within { outline: 2px solid #a1e8ff; outline-offset: 3px; }
+.task-pdf-download { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.task-documents .btn, .task-timer-controls .btn { border-radius: 999px; min-height: 44px; box-shadow: 0 5px 14px #050d2555; }
+
+#task-focus {
+  padding: 18px 12px;
+  background: radial-gradient(ellipse at 50% 33%, #5665a36b, transparent 64%),
+    linear-gradient(145deg, #273653, #22304a);
+  border-color: #a7beef55;
+}
+.hourglass-stage { position: relative; display: grid; place-items: center; height: 120px; }
+.hourglass-stage::after {
+  content: ""; position: absolute; bottom: 4px; width: 68px; height: 10px;
+  background: #091425; border-radius: 50%; filter: blur(5px);
+}
+.hourglass { position: relative; z-index: 1; filter: drop-shadow(0 7px 10px #09182ca0); }
+.hourglass-turn { width: 60px; }
+.glass-cap {
+  display: block; height: 9px; border-radius: 50%;
+  background: linear-gradient(170deg, #eff8ff, #a8bce7 40%, #626695 74%, #abbfea);
+  box-shadow: inset 0 -2px 2px #19263980;
+}
+.glass-bulbs { position: relative; height: 83px; margin: -2px 6px; }
+.glass-top, .glass-bottom {
+  position: absolute; inset-inline: 0; height: 50%; overflow: hidden;
+  background: linear-gradient(100deg, #bbecffcc, #7396cc54 19%, #8298d234 64%, #def7ffb3);
+}
+.glass-top { top: 0; clip-path: polygon(0 0,100% 0,95% 30%,78% 61%,56% 94%,50% 100%,44% 94%,22% 61%,5% 30%); }
+.glass-bottom { bottom: 0; clip-path: polygon(50% 0,56% 6%,78% 39%,95% 70%,100% 100%,0 100%,5% 70%,22% 39%,44% 6%); }
+.glass-top::after, .glass-bottom::after {
+  content: ""; position: absolute; bottom: 0; inset-inline: 0;
+  background: linear-gradient(100deg, #bba0fc, #ffe0ad 48%, #c893e0);
+}
+.glass-top::after { height: calc(var(--sand, 100%) * .67); }
+.glass-bottom::after { height: calc(var(--sand-fallen, 0%) * .67); }
+.sand-stream { display: none; position: absolute; left: calc(50% - 1px); top: 50%; height: 43%; width: 2px; background: #f2cdee; }
+.focus-running .sand-stream { display: block; }
+.focus-running .hourglass { animation: hourglass-hover 3s ease-in-out infinite; }
+.hourglass-turn.turning { animation: hourglass-turn .75s cubic-bezier(.2,.7,.3,1); }
+@keyframes hourglass-hover { 50% { transform: translateY(-5px); } }
+@keyframes hourglass-turn { to { transform: perspective(320px) rotateY(25deg) rotateZ(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .focus-running .hourglass, .hourglass-turn.turning { animation: none; }
+}

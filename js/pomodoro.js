@@ -59,6 +59,9 @@
     if (running) root.dispatchEvent(new Event("studybrain-focus-tick"));
     if (!mounted || !document.contains(mounted.el)) return;
     var value = clock.get(mounted.id), el = mounted.el;
+    el.classList.toggle("focus-running", value.running);
+    el.style.setProperty("--sand", (value.remaining / DURATION * 100) + "%");
+    el.style.setProperty("--sand-fallen", (100 - value.remaining / DURATION * 100) + "%");
     el.querySelector(".task-timer-time").textContent = format(value.remaining);
     el.querySelector(".task-timer-status").textContent = value.running ? "זמן להתרכז. סגירת החלון לא עוצרת את הטיימר." : value.remaining === 0 ? "50 דקות הושלמו. זמן להפסקה!" : value.remaining < DURATION ? "הטיימר מושהה" : "50 דקות למטלה הזאת, בקצב שלך";
     el.querySelector(".task-timer-toggle").textContent = value.running ? "השהיה" : value.remaining === 0 ? "התחל מחדש · 50 דקות" : value.remaining < DURATION ? "המשך" : "התחל · 50 דקות";
@@ -72,9 +75,18 @@
     pause: function(id) { var ok=clock.pause(id); render(); return ok; },
     mount: function (el, task) {
       mounted = {el: el, id: task.id};
-      el.innerHTML = '<div class="task-timer-heading">זמן מיקוד למטלה</div><div class="task-timer-time" role="timer" aria-live="off" dir="ltr">50:00</div><p class="task-timer-status" aria-live="polite"></p><div class="task-timer-controls"><button type="button" class="btn btn-primary task-timer-toggle">התחל · 50 דקות</button><button type="button" class="btn btn-ghost task-timer-reset">איפוס ל־50 דקות</button></div><p class="task-timer-storage" role="status"></p>';
+      el.innerHTML = '<div class="task-timer-heading">זמן מיקוד למטלה</div><div class="hourglass-stage" aria-hidden="true"><div class="hourglass"><div class="hourglass-turn"><i class="glass-cap"></i><div class="glass-bulbs"><i class="glass-top"></i><i class="glass-bottom"></i><i class="sand-stream"></i></div><i class="glass-cap"></i></div></div></div><div class="task-timer-time" role="timer" aria-live="off" dir="ltr">50:00</div><p class="task-timer-status" aria-live="polite"></p><div class="task-timer-controls"><button type="button" class="btn btn-primary task-timer-toggle">התחל · 50 דקות</button><button type="button" class="btn btn-ghost task-timer-reset">איפוס ל־50 דקות</button></div><p class="task-timer-storage" role="status"></p>';
       function update(ok) { el.querySelector(".task-timer-storage").textContent = ok ? "" : "לא ניתן לשמור את הטיימר בדפדפן. רענון עלול לאבד את ההתקדמות."; render(); }
-      el.querySelector(".task-timer-toggle").addEventListener("click", function () { update(clock.get(task.id).running ? clock.pause(task.id) : clock.start(task.id)); });
+      var turn = el.querySelector(".hourglass-turn");
+      turn.addEventListener("animationend", function () { turn.classList.remove("turning"); });
+      el.querySelector(".task-timer-toggle").addEventListener("click", function () {
+        if (clock.get(task.id).running) {
+          update(clock.pause(task.id));
+          return;
+        }
+        if (!root.matchMedia("(prefers-reduced-motion: reduce)").matches) turn.classList.add("turning");
+        update(clock.start(task.id));
+      });
       el.querySelector(".task-timer-reset").addEventListener("click", function () { update(clock.reset(task.id)); });
       render();
     }
