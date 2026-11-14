@@ -386,6 +386,7 @@
           '<div class="modal-footer">' +
             '<button class="btn btn-ghost" type="button" id="modal-edit">עריכה</button>' +
             '<button class="btn btn-ghost" type="button" id="modal-delete">מחיקה</button>' +
+            '<button class="btn btn-ghost" type="button" id="modal-delete-confirm" hidden>אישור מחיקה</button>' +
             '<button class="btn ' + (t.completed ? "btn-ghost" : "btn-primary") + '" type="button" id="modal-complete">' +
               icon("check") + (t.completed ? " החזרה לביצוע" : " סימון כהושלם") +
             "</button>" +
@@ -401,7 +402,11 @@
     });
     $("#modal-edit").addEventListener("click", function () { openAddTaskModal(null, t); });
     $("#modal-delete").addEventListener("click", function () {
-      if (!window.confirm("למחוק את המטלה ״" + t.title + "״?")) return;
+      $("#modal-delete").hidden = true;
+      $("#modal-delete-confirm").hidden = false;
+      $("#modal-delete-confirm").focus();
+    });
+    $("#modal-delete-confirm").addEventListener("click", function () {
       var previous = state.tasks;
       state.tasks = previous.filter(function (item) { return item.id !== id; });
       if (!saveTasks()) { state.tasks = previous; return; }
@@ -439,7 +444,7 @@
     if (e.key === "Escape") closeModal();
     if (e.key === "Tab") {
       // simple focus trap
-      var focusables = $all(".modal button:not(:disabled), .modal input:not(:disabled), .modal select:not(:disabled), .modal textarea:not(:disabled)", $("#modal-root"));
+      var focusables = $all(".modal button:not(:disabled):not([hidden]), .modal input:not(:disabled), .modal select:not(:disabled), .modal textarea:not(:disabled)", $("#modal-root"));
       if (!focusables.length) return;
       var first = focusables[0];
       var last = focusables[focusables.length - 1];
