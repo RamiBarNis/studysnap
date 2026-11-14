@@ -247,8 +247,8 @@
     return due;
   }
 
-  function openAddTaskModal() {
-    state.lastFocusedEl = document.activeElement;
+  function openAddTaskModal(event, task) {
+    if (!$("#modal-overlay")) state.lastFocusedEl = document.activeElement;
     var subjects = Object.keys(MOCK.subjects);
     var dueOpts = ["Today", "Tomorrow", "This Friday", "Next Monday", "Next week"];
 
@@ -256,7 +256,7 @@
       '<div class="modal-overlay" id="modal-overlay">' +
         '<div class="modal" dir="rtl" role="dialog" aria-modal="true" aria-labelledby="add-modal-title">' +
           '<div class="modal-header">' +
-            '<h2 id="add-modal-title">מטלה חדשה</h2>' +
+            '<h2 id="add-modal-title">' + (task ? "עריכת מטלה" : "מטלה חדשה") + '</h2>' +
             '<button class="icon-btn" type="button" id="modal-close" aria-label="Close">' + icon("x") + "</button>" +
           "</div>" +
           '<div class="modal-body">' +
@@ -285,13 +285,13 @@
               "</div>" +
               '<div class="form-group">' +
                 '<label class="form-label" for="at-mins">זמן משוער בדקות</label>' +
-                '<input class="form-input" type="number" id="at-mins" min="5" max="300" step="5" value="30" />' +
+                '<input class="form-input" type="number" id="at-mins" min="5" max="300" step="any" value="30" />' +
               "</div>" +
             "</div>" +
           "</div>" +
           '<div class="modal-footer">' +
             '<button class="btn btn-ghost" type="button" id="modal-cancel">ביטול</button>' +
-            '<button class="btn btn-primary" type="button" id="modal-save">' + icon("plus") + " הוספת מטלה</button>" +
+            '<button class="btn btn-primary" type="button" id="modal-save">' + (task ? "שמירת שינויים" : icon("plus") + " הוספת מטלה") + "</button>" +
           "</div>" +
         "</div>" +
       "</div>";
@@ -301,6 +301,14 @@
     $("#modal-close").addEventListener("click", closeModal);
     $("#modal-cancel").addEventListener("click", closeModal);
     document.addEventListener("keydown", onModalKeydown);
+
+    if (task) {
+      $("#at-title").value = task.title;
+      $("#at-subject").value = task.subject;
+      $("#at-due").value = task.due;
+      $("#at-priority").value = task.priority;
+      $("#at-mins").value = task.estMinutes;
+    }
 
     $("#modal-save").addEventListener("click", function () {
       var titleEl = $("#at-title");
@@ -314,24 +322,27 @@
       if (!$("#at-due").reportValidity() || !$("#at-mins").reportValidity()) return;
       var due = $("#at-due").value || "No deadline";
       var newTask = {
-        id: crypto.randomUUID(),
+        id: task ? task.id : crypto.randomUUID(),
         title: title,
         subject: $("#at-subject").value.trim() || "General",
         due: due,
         dueDate: resolveDueDate(due),
         priority: $("#at-priority").value,
         estMinutes: Math.min(300, Math.max(5, Number($("#at-mins").value) || 30)),
-        completed: false,
-        source: $("#modal-save").dataset.source || "Added manually",
-        description: "",
-        subtasks: []
+        completed: task ? task.completed : false,
+        source: (task && task.source) || $("#modal-save").dataset.source || "Added manually",
+        description: task ? task.description : "",
+        subtasks: task ? task.subtasks : []
       };
-      state.tasks.push(newTask);
-      if (!saveTasks()) { state.tasks.pop(); return; }
+      var previous = state.tasks;
+      state.tasks = task ? previous.map(function (item) {
+        return item.id === task.id ? Object.assign({}, item, newTask) : item;
+      }) : previous.concat(newTask);
+      if (!saveTasks()) { state.tasks = previous; return; }
       renderTasks();
       renderPlan();
       closeModal();
-      toast("נוספה מטלה: " + title, "list-checks");
+      toast((task ? "המטלה עודכנה: " : "נוספה מטלה: ") + title, "list-checks");
     });
 
     $("#at-title").focus();
@@ -373,6 +384,8 @@
             '<section id="task-focus" class="task-focus" aria-label="טיימר למטלה"></section>' +
           "</div>" +
           '<div class="modal-footer">' +
+            '<button class="btn btn-ghost" type="button" id="modal-edit">עריכה</button>' +
+            '<button class="btn btn-ghost" type="button" id="modal-delete">מחיקה</button>' +
             '<button class="btn ' + (t.completed ? "btn-ghost" : "btn-primary") + '" type="button" id="modal-complete">' +
               icon("check") + (t.completed ? " החזרה לביצוע" : " סימון כהושלם") +
             "</button>" +
@@ -385,6 +398,18 @@
     $("#modal-close").addEventListener("click", closeModal);
     $("#modal-complete").addEventListener("click", function () {
       if (toggleTask(id)) closeModal();
+    });
+    $("#modal-edit").addEventListener("click", function () { openAddTaskModal(null, t); });
+    $("#modal-delete").addEventListener("click", function () {
+      if (!window.confirm("למחוק את המטלה ״" + t.title + "״?")) return;
+      var previous = state.tasks;
+      state.tasks = previous.filter(function (item) { return item.id !== id; });
+      if (!saveTasks()) { state.tasks = previous; return; }
+      window.StudyBrainTimer.pause(id);
+      closeModal();
+      renderTasks();
+      renderPlan();
+      toast("המטלה נמחקה", "check-circle");
     });
     window.StudyBrainTimer.mount($("#task-focus"), t);
     var aiBtn = $("#modal-ai");
