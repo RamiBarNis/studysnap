@@ -384,6 +384,7 @@
             "</div>" +
             (t.subtasks.length ? '<h3 class="subtasks-title">שלבים במטלה</h3>' : '') +
             subtasksHtml +
+            '<section id="task-attachments" class="task-focus" aria-label="קובצי המטלה"></section>' +
             '<section id="task-focus" class="task-focus" aria-label="טיימר למטלה"></section>' +
           "</div>" +
           '<div class="modal-footer">' +
@@ -429,6 +430,7 @@
       renderPlan();
       toast("המטלה נמחקה", "check-circle");
     });
+    mountTaskAttachments($("#task-attachments"), id);
     window.StudyBrainTimer.mount($("#task-focus"), t);
     var aiBtn = $("#modal-ai");
     if (aiBtn) {
@@ -451,6 +453,64 @@
     });
     document.addEventListener("keydown", onModalKeydown);
     $("#modal-close").focus();
+  }
+
+  function mountTaskAttachments(area, id) {
+    area.innerHTML = '<label class="form-label" for="task-pdf">צירוף PDF למטלה</label>' +
+      '<input id="task-pdf" type="file" accept=".pdf,application/pdf">' +
+      '<p role="status" class="card-sub"></p><ul></ul>';
+    var input = area.querySelector("input");
+    var list = area.querySelector("ul");
+    var status = area.querySelector('[role="status"]');
+    var attachments = window.StudyBrainAttachments;
+    async function render() {
+      var files = await attachments.list(id);
+      list.replaceChildren();
+      files.forEach(function (file) {
+        var row = document.createElement("li");
+        var download = document.createElement("button");
+        download.type = "button";
+        download.className = "btn btn-ghost btn-sm";
+        download.textContent = "הורדה: " + file.name;
+        download.onclick = function () {
+          var url = URL.createObjectURL(file.blob);
+          var link = document.createElement("a");
+          link.href = url;
+          link.download = file.name;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+        };
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn btn-ghost btn-sm";
+        remove.textContent = "הסרה";
+        remove.setAttribute("aria-label", "הסרת " + file.name);
+        remove.onclick = async function () {
+          try { await attachments.remove(file.id); await render(); }
+          catch (_) { status.textContent = "לא ניתן להסיר את הקובץ."; }
+        };
+        row.append(download, remove);
+        list.append(row);
+      });
+    }
+    input.onchange = async function () {
+      var file = input.files[0];
+      if (!file) return;
+      input.disabled = true;
+      try {
+        await attachments.add(id, file);
+        await render();
+        status.textContent = "ה־PDF נשמר במכשיר הזה.";
+      } catch (error) {
+        status.textContent = error.message || "לא ניתן לשמור את הקובץ.";
+      } finally {
+        input.value = "";
+        input.disabled = false;
+      }
+    };
+    render().catch(function () { status.textContent = "לא ניתן לטעון את קובצי המטלה."; });
   }
 
   function onModalKeydown(e) {

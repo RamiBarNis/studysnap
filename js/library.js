@@ -15,6 +15,23 @@
       tx.onerror = tx.onabort = function () { reject(tx.error || new Error("Storage failed")); };
     });
   }
+  window.StudyBrainAttachments = {
+    async add(taskId, file) {
+      if (!/\.pdf$/i.test(file.name) || file.size > 25 * 1024 * 1024 ||
+          await file.slice(0, 5).text() !== "%PDF-") throw Error("יש לבחור PDF תקין עד 25MB.");
+      await transaction("readwrite", function (store) {
+        return store.put({id: JSON.stringify(["task-pdf", taskId, file.name]), taskId: taskId,
+          name: file.name, blob: file, created: Date.now()});
+      });
+    },
+    async list(taskId) {
+      return (await transaction("readonly", function (store) { return store.getAll(); }))
+        .filter(function (file) { return file.taskId === taskId; });
+    },
+    remove(id) {
+      return transaction("readwrite", function (store) { return store.delete(id); });
+    }
+  };
   function button(label, action) {
     var el = document.createElement("button");
     el.type = "button"; el.className = "btn btn-ghost btn-sm"; el.textContent = label;
@@ -22,6 +39,7 @@
   }
   async function render() {
     var files = await transaction("readonly", function (store) { return store.getAll(); });
+    files = files.filter(function (file) { return !file.taskId; });
     list.replaceChildren();
     files.sort(function (a, b) { return b.created - a.created; }).forEach(function (file) {
       var row = document.createElement("li"); row.className = "library-item";
