@@ -735,6 +735,17 @@
   }
 
   window.StudyBrainTasks = {
+    snapshot: function () {
+      if (damagedStorage) throw Error("לא ניתן לסנכרן כי המטלות המקומיות לא נטענו.");
+      return JSON.parse(JSON.stringify(state.tasks));
+    },
+    replaceFromCloud: function (tasks) {
+      var previous = state.tasks;
+      state.tasks = tasks;
+      if (!saveTasks()) { state.tasks = previous; throw Error("לא ניתן לשמור את המטלות במכשיר."); }
+      renderTasks();
+      renderPlan();
+    },
     list: function () { return state.tasks.filter(function (t) { return !t.archived; }).map(function (t) { return {id:t.id, title:t.title, subject:t.subject, due:t.due, completed:t.completed}; }); },
     open: openTaskModal
   };
