@@ -215,3 +215,21 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
  .calendar-toolbar {align-items:flex-start;flex-direction:column}.calendar-scroll {overflow-x:auto}.calendar-grid {min-width:620px}.calendar-day,.calendar-blank {min-height:95px}.calendar-key {display:block;margin:6px 0}.exam-grid {grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){.workspace-panel {animation:none}}
+
+/* Task actions sit below the timer, inside the scrolling content. */
+.task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: .45rem;
+  margin: 1rem auto .25rem;
+}
+.task-actions .btn {
+  min-height: 44px;
+  padding: .45rem .85rem;
+  border-radius: 999px;
+  font-size: .875rem;
+  box-shadow: 0 4px 12px rgb(4 12 28 / 22%);
+}
+.task-actions .btn[hidden] { display: none; }

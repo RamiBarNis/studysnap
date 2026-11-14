@@ -386,8 +386,7 @@
             subtasksHtml +
             '<section id="task-attachments" class="task-focus" aria-label="קובצי המטלה"></section>' +
             '<section id="task-focus" class="task-focus" aria-label="טיימר למטלה"></section>' +
-          "</div>" +
-          '<div class="modal-footer">' +
+            '<div class="task-actions" role="group" aria-label="פעולות מטלה">' +
             '<button class="btn btn-ghost" type="button" id="modal-edit">עריכה</button>' +
             '<button class="btn btn-ghost" type="button" id="modal-archive">' + (t.archived ? "שחזור מהארכיון" : "העברה לארכיון") + '</button>' +
             '<button class="btn btn-ghost" type="button" id="modal-delete">מחיקה</button>' +
@@ -395,6 +394,7 @@
             '<button class="btn ' + (t.completed ? "btn-ghost" : "btn-primary") + '" type="button" id="modal-complete">' +
               icon("check") + (t.completed ? " החזרה לביצוע" : " סימון כהושלם") +
             "</button>" +
+          "</div>" +
           "</div>" +
         "</div>" +
       "</div>";
