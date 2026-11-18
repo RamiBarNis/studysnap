@@ -85,23 +85,29 @@
       var title = document.createElement("strong"); title.dir = "auto"; title.textContent = file.name;
       var meta = document.createElement("p"); meta.textContent = file.course + " · " + Math.ceil(file.blob.size / 1024) + " KB";
       row.append(title, meta);
-      row.append(button("הורדה לצירוף לצ׳אט", function () {
+      var actions = document.createElement("div"); actions.className = "file-actions";
+      actions.append(button("הורדה", function () {
         var url = URL.createObjectURL(file.blob);
         var link = document.createElement("a"); link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); link.remove();
         setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
       }));
-      row.append(button("יצירת מטלה", function () {
+      actions.append(button("יצירת מטלה", function () {
         window.dispatchEvent(new CustomEvent("studysnap-file-task", {detail: {name: file.name, course: file.course}}));
       }));
-      row.append(button("הסרה", async function () {
+      actions.append(button("הסרה", async function () {
         if (!window.confirm("להסיר את הקובץ מהספרייה המקומית? " + file.name)) return;
         try {
           await transaction("readwrite", function (store) { return store.delete(file.id); }); await render();
         } catch (error) { report("לא ניתן להסיר את הקובץ. נסה שוב."); }
       }));
+      row.append(actions);
       list.append(row);
     });
-    if (!files.length) list.textContent = "אין עדיין קבצים. אפשר להתחיל מקובץ תרגיל או סילבוס.";
+    if (!files.length) {
+      var empty = document.createElement("li"); empty.className = "library-empty";
+      empty.innerHTML = window.icon("file-text") + "<span>אין קבצים בספרייה</span>";
+      list.append(empty);
+    }
   }
   input.addEventListener("change", async function () {
     input.disabled = true;

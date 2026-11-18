@@ -6,7 +6,7 @@
   <title>StudyBrain — University study workspace</title>
   <meta name="description" content="Organize university course files, assignment deadlines, and focus sessions locally." />
   <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/heart-theme.css?v=deadlines-2" />
+  <link rel="stylesheet" href="css/heart-theme.css?v=workspace-polish" />
 </head>
 <body>
 
@@ -63,17 +63,22 @@
               <div class="progress-track" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
                 <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
               </div>
-              <span class="progress-label" id="progress-label">0 of 0 done</span>
+              <span class="progress-label" id="progress-label">0 מתוך 0 הושלמו</span>
             </div>
-            <div class="filter-row" role="group" aria-label="Filter tasks">
-              <button class="filter-btn" type="button" data-filter="all" aria-pressed="true">הכול</button>
-              <button class="filter-btn" type="button" data-filter="todo" aria-pressed="false">לביצוע</button>
-              <button class="filter-btn" type="button" data-filter="done" aria-pressed="false">הושלמו</button>
-              <button class="filter-btn" type="button" data-filter="archived" aria-pressed="false">ארכיון</button>
-            </div>
-            <div class="task-sort">
-              <label for="task-sort">מיון לפי</label>
-              <select class="form-select" id="task-sort"><option value="due">מועד הגשה</option><option value="subject">נושא / קורס</option></select>
+            <div class="task-toolbar">
+              <div class="filter-row" role="group" aria-label="סינון מטלות">
+                <button class="filter-btn" type="button" data-filter="all" aria-pressed="true">הכול</button>
+                <button class="filter-btn" type="button" data-filter="todo" aria-pressed="false">לביצוע</button>
+                <button class="filter-btn" type="button" data-filter="done" aria-pressed="false">הושלמו</button>
+                <button class="filter-btn" type="button" data-filter="archived" aria-pressed="false">ארכיון</button>
+              </div>
+              <div class="task-sort">
+                <label for="task-sort">מיון לפי</label>
+                <select class="form-select" id="task-sort">
+                  <option value="due">מועד הגשה</option>
+                  <option value="subject">נושא / קורס</option>
+                </select>
+              </div>
             </div>
             <ul class="task-list" id="task-list"></ul>
           </section>          <section class="card plan-card" aria-labelledby="plan-title">
@@ -83,24 +88,42 @@
             </div>
             <div id="plan-area"></div>
           </section></div></section>
-      <section id="panel-files" class="workspace-panel" role="tabpanel" aria-labelledby="tab-files" hidden>          <section class="card" aria-labelledby="library-title" dir="rtl" lang="he">
-            <div class="card-head"><h2 id="library-title">חומרי הלימוד שלי</h2></div>
-            <p class="card-sub">קבצי הקורסים · נשמרים בדפדפן הזה בלבד.</p>
-
-            <label class="form-label" for="library-course">קורס</label>
-            <input class="form-input" id="library-course" placeholder="למשל: אלגברה לינארית" />
-            <label class="form-label" for="library-files">הוספת קבצים (עד 25MB לקובץ)</label>
-            <input id="library-files" type="file" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.webp" />
-            <p id="library-status" role="status"></p>
-            <ul id="library-list" class="task-list"></ul>
-            <details class="storage-note"><summary>אחסון וצירוף לצ׳אט</summary><p>הורד קובץ מהרשימה כדי לצרף אותו לצ׳אט. שמור עותק מקורי: ניקוי נתוני הדפדפן מוחק את הספרייה.</p></details>
-            <p class="card-sub">המטלות נשמרות במכשיר הזה. להעברה למכשיר אחר: ייצאו גיבוי וייבאו אותו שם. אין סנכרון אוטומטי.</p>
-            <label class="form-label" for="import-tasks">ייבוא גיבוי מטלות</label><input id="import-tasks" type="file" accept=".json,application/json"><p id="import-status" role="status"></p>
-            <button id="export-tasks" class="btn btn-ghost" type="button">ייצוא מטלות לצ׳אט / גיבוי</button>
-          </section></section>
+      <section id="panel-files" class="workspace-panel files-layout" dir="rtl" role="tabpanel" aria-labelledby="tab-files" hidden>
+        <section class="card library-card" aria-labelledby="library-title">
+          <div class="card-head"><span data-icon="book-open"></span><h2 id="library-title">חומרי הלימוד שלי</h2></div>
+          <p class="card-sub">קבצי הקורסים נשמרים בדפדפן הזה בלבד.</p>
+          <div class="library-upload">
+            <div>
+              <label class="form-label" for="library-course">קורס</label>
+              <input class="form-input" id="library-course" placeholder="למשל אלגברה לינארית" />
+            </div>
+            <label class="btn btn-primary file-pick">
+              <span data-icon="upload"></span> הוספת קבצים
+              <input id="library-files" type="file" multiple aria-describedby="library-size" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.webp" />
+            </label>
+            <small id="library-size">עד <bdi>25 MB</bdi> לקובץ</small>
+          </div>
+          <p id="library-status" class="workspace-status" role="status"></p>
+          <ul id="library-list" class="task-list"></ul>
+        </section>
+        <div class="files-sidebar">
+          <!-- SYNC_PANEL -->
+          <section class="card" aria-labelledby="backup-title">
+            <div class="card-head"><span data-icon="layers"></span><h2 id="backup-title">גיבוי מטלות</h2></div>
+            <p class="card-sub">הורדת מטלות כקובץ או ייבוא מגיבוי קיים.</p>
+            <div class="file-actions">
+              <button id="export-tasks" class="btn btn-ghost" type="button">הורדת גיבוי</button>
+              <label class="btn btn-ghost file-pick">ייבוא גיבוי
+                <input id="import-tasks" type="file" accept=".json,application/json" />
+              </label>
+            </div>
+            <p id="import-status" class="workspace-status" role="status"></p>
+          </section>
+        </div>
+      </section>
       <section id="panel-exams" class="workspace-panel card" dir="rtl" role="tabpanel" aria-labelledby="tab-exams" hidden>
-        <div class="card-head"><h1>המבחנים שלי</h1><span class="spacer"></span><button id="add-exam" type="button" class="btn btn-primary">הוספת מבחן</button></div>
-        <p id="exam-status" role="status"></p><div id="exam-list" class="exam-grid"></div>
+        <div class="card-head"><span data-icon="graduation-cap"></span><h1>המבחנים שלי</h1><span class="spacer"></span><button id="add-exam" type="button" class="btn btn-primary"><span data-icon="plus"></span> מבחן חדש</button></div>
+        <p id="exam-status" class="workspace-status" role="status"></p><div id="exam-list" class="exam-grid"></div>
       </section>
       <section id="panel-calendar" class="workspace-panel card" dir="rtl" role="tabpanel" aria-labelledby="tab-calendar" hidden>
         <div class="calendar-toolbar"><h1 id="calendar-title"></h1><div><button id="calendar-prev" type="button" class="btn btn-ghost btn-sm">הקודם</button><button id="calendar-today" type="button" class="btn btn-ghost btn-sm">החודש</button><button id="calendar-next" type="button" class="btn btn-ghost btn-sm">הבא</button></div></div>
@@ -139,7 +162,7 @@
   <script src="js/pomodoro.js?v=hourglass-1"></script>
   <script src="js/task-backup.js?v=focus-calendar-2"></script>
   <script src="js/app.js?v=deadlines-2"></script>
-  <script src="js/library.js?v=storage-reopen-1"></script>
+  <script src="js/library.js?v=workspace-polish"></script>
   <script src="js/workspace.js?v=focus-calendar-1"></script>
 </body>
 </html>
