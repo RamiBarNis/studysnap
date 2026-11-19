@@ -9,7 +9,7 @@
 
   var state = {
     tasks: [],
-    filter: "all",
+    filter: "todo",
     resourceFilter: "All",
     detectedAdded: false,
     activeTaskId: null,
@@ -136,7 +136,7 @@
     var list = $("#home-deadline-list");
     var today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Jerusalem"}).format(new Date());
     var upcoming = tasks.filter(function (task) {
-      return !task.completed && dueKey(task) !== "9999" && task.due >= today;
+      return dueKey(task) !== "9999" && task.due >= today;
     }).sort(byDue).slice(0, 4);
     var colors = ["mint", "blue", "violet", "cyan"];
     list.innerHTML = upcoming.map(function (task, index) {
@@ -151,35 +151,23 @@
   }
 
   function renderProgress() {
-    var included = state.tasks.filter(function (t) { return !t.archived; });
-    renderUpcoming(included);
-    var done = included.filter(function (t) { return t.completed; }).length;
-    var total = included.length;
-    var pct = total ? Math.round((done / total) * 100) : 0;
-    $("#progress-fill").style.width = pct + "%";
-    $("#progress-bar").setAttribute("aria-valuenow", String(pct));
-    $("#progress-label").textContent = done + " מתוך " + total + " הושלמו";
-    window.dispatchEvent(new Event("studybrain-tasks-changed"));
-    var left = total - done;
+    var openTasks = state.tasks.filter(function (t) { return !t.archived && !t.completed; });
+    renderUpcoming(openTasks);
+    var left = openTasks.length;
+    var pct = Math.max(0, 100 - left * 10);
+    var countLabel = left === 1 ? "מטלה אחת לביצוע" : left + " מטלות לביצוע";
+    $("#progress-label").textContent = countLabel;
+    $("#heart-left").textContent = countLabel;
     var heart = $("#heart-stage");
-    if (heart) {
-      heart.style.setProperty("--heart-fill", pct + "%");
-      heart.setAttribute("aria-valuenow", String(pct));
-      heart.setAttribute("aria-valuetext", done + " מתוך " + total + " מטלות הושלמו");
-      heart.classList.toggle("is-complete", total > 0 && done === total);
-      $("#heart-percent").textContent = pct;
-      $("#heart-done").textContent = done;
-      $("#heart-left").textContent = left;
-      $("#heart-caption").textContent = !total ? "אין מטלות" : done + " מתוך " + total + " מטלות";
-    }
-    var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    var now = new Date();
-    var dateStr = now.toLocaleDateString("he-IL", {weekday: "long", day: "numeric", month: "long"});
-    var todayTask = state.tasks.find(function (t) { return t.due === "Today" && !t.completed; });
-    var urgentNote = todayTask ? " · " + todayTask.title + " is due today" : "";
-    $("#greeting-sub").textContent =
-      dateStr + " · " + (left === 0 ? "אין מטלות פתוחות" : left + " מטלות בדרך");
+    var wasFull = heart.getAttribute("aria-valuenow") === "100";
+    heart.style.setProperty("--heart-fill", pct + "%");
+    heart.setAttribute("aria-valuenow", String(pct));
+    if (left > 0 || !wasFull) heart.classList.toggle("is-complete", left === 0);
+    $("#heart-percent").textContent = pct;
+    $("#greeting-sub").textContent = new Date().toLocaleDateString("he-IL", {
+      timeZone: "Asia/Jerusalem", weekday: "long", day: "numeric", month: "long"
+    });
+    window.dispatchEvent(new Event("studybrain-tasks-changed"));
   }
 
   function renderTasks() {

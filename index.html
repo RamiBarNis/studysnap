@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>StudyBrain — University study workspace</title>
   <meta name="description" content="Organize university course files, assignment deadlines, and focus sessions locally." />
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/heart-theme.css?v=workspace-polish" />
+  <link rel="stylesheet" href="css/styles.css?v=open-tasks" />
+  <link rel="stylesheet" href="css/heart-theme.css?v=open-tasks" />
 </head>
 <body>
 
@@ -37,12 +37,12 @@
       <section id="panel-home" class="workspace-panel home-space" role="tabpanel" aria-labelledby="tab-home">
         <header class="home-date" dir="rtl"><h1>ההתקדמות שלי</h1><p id="greeting-sub"></p></header>
         <div class="home-heart-area">
-          <div class="heart-stage" id="heart-stage" role="progressbar" aria-label="התקדמות בשיעורי הבית" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="heart-stage" id="heart-stage" role="meter" aria-label="מילוי הלב לפי המטלות שנותרו" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
             <div class="heart-art"><img class="heart-empty" src="assets/heart.png" alt="" width="1103" height="1426"><img class="heart-color" src="assets/heart.png" alt="" width="1103" height="1426"></div>
           </div>
-          <div class="home-progress" dir="rtl"><strong><span id="heart-percent">0</span>%</strong><span id="heart-caption" aria-live="polite"></span></div>
+          <div class="home-progress" dir="rtl"><strong dir="ltr"><span id="heart-percent">100</span>%</strong></div>
         </div>
-        <div class="home-stats" dir="rtl"><span><strong id="heart-left">0</strong> לביצוע</span><span><strong id="heart-done">0</strong> הושלמו</span><button id="quick-add-task" type="button" class="btn btn-primary"><span data-icon="plus"></span> מטלה חדשה</button></div>
+        <div class="home-stats" dir="rtl"><span id="heart-left" role="status">0 מטלות לביצוע</span><button id="quick-add-task" type="button" class="btn btn-primary"><span data-icon="plus"></span> מטלה חדשה</button></div>
         <section class="home-deadlines card" dir="rtl" aria-labelledby="home-deadlines-title">
           <div class="home-deadlines-head"><h2 id="home-deadlines-title">הגשות קרובות</h2>
             <button id="show-all-tasks" class="btn btn-ghost btn-sm" type="button">הצגת כל המטלות ‹</button>
@@ -59,16 +59,11 @@
                 <span data-icon="plus"></span> מטלה חדשה
               </button>
             </div>
-            <div class="progress-summary">
-              <div class="progress-track" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
-                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-              </div>
-              <span class="progress-label" id="progress-label">0 מתוך 0 הושלמו</span>
-            </div>
+            <p class="task-count" id="progress-label" role="status">0 מטלות לביצוע</p>
             <div class="task-toolbar">
               <div class="filter-row" role="group" aria-label="סינון מטלות">
-                <button class="filter-btn" type="button" data-filter="all" aria-pressed="true">הכול</button>
-                <button class="filter-btn" type="button" data-filter="todo" aria-pressed="false">לביצוע</button>
+                <button class="filter-btn" type="button" data-filter="todo" aria-pressed="true">לביצוע</button>
+                <button class="filter-btn" type="button" data-filter="all" aria-pressed="false">הכול</button>
                 <button class="filter-btn" type="button" data-filter="done" aria-pressed="false">הושלמו</button>
                 <button class="filter-btn" type="button" data-filter="archived" aria-pressed="false">ארכיון</button>
               </div>
@@ -161,7 +156,7 @@
   <script src="js/data.js?v=qa-5"></script>
   <script src="js/pomodoro.js?v=hourglass-1"></script>
   <script src="js/task-backup.js?v=focus-calendar-2"></script>
-  <script src="js/app.js?v=deadlines-2"></script>
+  <script src="js/app.js?v=open-tasks"></script>
   <script src="js/library.js?v=workspace-polish"></script>
   <script src="js/workspace.js?v=focus-calendar-1"></script>
 </body>
