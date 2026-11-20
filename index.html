@@ -6,7 +6,7 @@
   <title>StudyBrain — University study workspace</title>
   <meta name="description" content="Organize university course files, assignment deadlines, and focus sessions locally." />
   <link rel="stylesheet" href="css/styles.css?v=open-tasks" />
-  <link rel="stylesheet" href="css/heart-theme.css?v=open-tasks" />
+  <link rel="stylesheet" href="css/heart-theme.css?v=confirm-completion" />
 </head>
 <body>
 
@@ -133,6 +133,16 @@
   <div id="modal-root"></div>
   <div class="toast-region" id="toast-root" aria-live="polite"></div>
 
+  <dialog id="task-completion-dialog" dir="rtl" aria-labelledby="task-completion-title" aria-describedby="task-completion-name">
+    <form method="dialog">
+      <h2 id="task-completion-title">סיימת את המטלה?</h2>
+      <p id="task-completion-name" dir="auto"></p>
+      <div class="exam-actions">
+        <button type="submit" value="cancel" class="btn btn-ghost" autofocus>ביטול</button>
+        <button type="submit" value="complete" class="btn btn-primary">כן, סיימתי</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="auth-dialog" dir="rtl" aria-labelledby="auth-title">
     <button id="auth-close" class="icon-btn" type="button" aria-label="סגירה">×</button>
     <h2 id="auth-title">ברוכים הבאים ל־StudyBrain</h2>
@@ -156,7 +166,7 @@
   <script src="js/data.js?v=qa-5"></script>
   <script src="js/pomodoro.js?v=hourglass-1"></script>
   <script src="js/task-backup.js?v=focus-calendar-2"></script>
-  <script src="js/app.js?v=open-tasks"></script>
+  <script src="js/app.js?v=confirm-completion"></script>
   <script src="js/library.js?v=workspace-polish"></script>
   <script src="js/workspace.js?v=focus-calendar-1"></script>
 </body>

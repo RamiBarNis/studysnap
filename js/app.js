@@ -210,14 +210,13 @@
     renderProgress();
   }
 
-  function toggleTask(id) {
+  function setTaskCompleted(id, completed) {
     var t = state.tasks.find(function (x) { return x.id === id; });
-    if (!t) return;
+    if (!t || t.completed === completed) return false;
     var previous = JSON.parse(JSON.stringify(t));
-    t.completed = !t.completed;
+    t.completed = completed;
     if (t.completed) {
       t.subtasks.forEach(function (s) { s.done = true; });
-
     }
     if (!saveTasks()) { Object.assign(t, previous); return false; }
     if (t.completed) window.StudyBrainTimer.pause(t.id);
@@ -226,10 +225,36 @@
     return true;
   }
 
+  function requestTaskToggle(id, onChange) {
+    var t = state.tasks.find(function (x) { return x.id === id; });
+    if (!t) return;
+    if (t.completed) {
+      if (setTaskCompleted(id, false)) onChange();
+      return;
+    }
+
+    var dialog = $("#task-completion-dialog");
+    if (dialog.open) return;
+    $("#task-completion-name").textContent = t.title;
+    dialog.returnValue = "";
+    dialog.addEventListener("close", function () {
+      if (dialog.returnValue === "complete" && setTaskCompleted(id, true)) onChange();
+    }, {once: true});
+    dialog.showModal();
+  }
+
   function initChecklist() {
     $("#task-list").addEventListener("click", function (e) {
       var toggle = e.target.closest("[data-toggle]");
-      if (toggle) { toggleTask(toggle.getAttribute("data-toggle")); return; }
+      if (toggle) {
+        var index = $all("#task-list [data-toggle]").indexOf(toggle);
+        requestTaskToggle(toggle.getAttribute("data-toggle"), function () {
+          var checks = $all("#task-list [data-toggle]");
+          var next = checks[Math.min(index, checks.length - 1)] || $("#panel-tasks [data-filter][aria-pressed='true']");
+          next.focus();
+        });
+        return;
+      }
       var open = e.target.closest("[data-open]");
       if (open) openTaskModal(open.getAttribute("data-open"));
     });
@@ -425,7 +450,7 @@
     overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
     $("#modal-close").addEventListener("click", closeModal);
     $("#modal-complete").addEventListener("click", function () {
-      if (toggleTask(id)) closeModal();
+      requestTaskToggle(id, closeModal);
     });
     $("#modal-edit").addEventListener("click", function () { openAddTaskModal(null, t); });
     $("#modal-archive").addEventListener("click", function () {
@@ -544,6 +569,7 @@
   }
 
   function onModalKeydown(e) {
+    if ($("#task-completion-dialog").open) return;
     if (e.key === "Escape") closeModal();
     if (e.key === "Tab") {
       // simple focus trap
