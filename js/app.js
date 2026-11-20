@@ -478,7 +478,7 @@
       toast("המטלה נמחקה", "check-circle");
     });
     mountTaskAttachments($("#task-attachments"), id);
-    window.StudyBrainTimer.mount($("#task-focus"), t);
+    window.StudyBrainTimer.mount($("#task-focus"), t.id);
     var aiBtn = $("#modal-ai");
     if (aiBtn) {
       aiBtn.addEventListener("click", function () {
@@ -685,18 +685,22 @@
 
   /* ---------- Study plan ---------- */
   function renderPlan() {
+    var timer = window.StudyBrainTimer;
+    var running = timer.runningId();
+    var standalone = running === timer.standaloneId;
     var active = state.tasks.find(function (task) {
-      return !task.archived && task.id === window.StudyBrainTimer.runningId();
+      return !task.archived && task.id === running;
     });
     var area = $("#plan-area");
-    if (!active) {
-      area.textContent = "פתח מטלה ולחץ על ״התחל״ כדי להתחיל סשן מיקוד של 50 דקות.";
+    if (!active && !standalone) {
+      area.textContent = "אפשר להתחיל סשן של 50 דקות מתוך מטלה או מכפתור הפרומודורו.";
       return;
     }
-    area.innerHTML = '<div class="plan-summary"><strong>' + escapeHtml(active.title) +
+    area.innerHTML = '<div class="plan-summary"><strong>' + (standalone ? "פרומודורו" : escapeHtml(active.title)) +
       '</strong><p id="active-focus-time" dir="ltr"></p>' +
-      '<button type="button" class="btn btn-ghost" id="plan-start">פתיחת המטלה</button></div>';
-    $("#plan-start").onclick = function () { openTaskModal(active.id); };
+      '<button type="button" class="btn btn-ghost" id="plan-start">' +
+      (standalone ? "פתיחת הטיימר" : "פתיחת המטלה") + '</button></div>';
+    $("#plan-start").onclick = standalone ? timer.openStandalone : function () { openTaskModal(active.id); };
     updateFocusTime();
   }
 

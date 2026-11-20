@@ -1,7 +1,8 @@
-/* StudyBrain: task-scoped 50-minute focus sessions, resilient to tab throttling. */
+/* StudyBrain: 50-minute focus sessions, resilient to tab throttling. */
 (function (root) {
   "use strict";
   var DURATION = 50 * 60 * 1000;
+  var STANDALONE_ID = "studybrain:standalone-pomodoro";
   function createClock(storage, now) {
     now = now || Date.now;
     var key = "studybrain-focus-v1", records = Object.create(null);
@@ -63,34 +64,49 @@
     el.style.setProperty("--sand", (value.remaining / DURATION * 100) + "%");
     el.style.setProperty("--sand-fallen", (100 - value.remaining / DURATION * 100) + "%");
     el.querySelector(".task-timer-time").textContent = format(value.remaining);
-    el.querySelector(".task-timer-status").textContent = value.running ? "זמן להתרכז. סגירת החלון לא עוצרת את הטיימר." : value.remaining === 0 ? "50 דקות הושלמו. זמן להפסקה!" : value.remaining < DURATION ? "הטיימר מושהה" : "50 דקות למטלה הזאת, בקצב שלך";
+    var status = el.querySelector(".task-timer-status");
+    var message = value.running ? "זמן להתרכז. סגירת החלון לא עוצרת את הטיימר." :
+      value.remaining === 0 ? "50 דקות הושלמו. זמן להפסקה!" :
+      value.remaining < DURATION ? "הטיימר מושהה" :
+      mounted.id === STANDALONE_ID ? "" : "50 דקות למטלה הזאת, בקצב שלך";
+    if (status.textContent !== message) status.textContent = message;
     el.querySelector(".task-timer-toggle").textContent = value.running ? "השהיה" : value.remaining === 0 ? "התחל מחדש · 50 דקות" : value.remaining < DURATION ? "המשך" : "התחל · 50 דקות";
   }
-  root.StudyBrainTimer = {
+  function openStandalone() {
+    var dialog = document.getElementById("pomodoro-dialog");
+    timer.mount(document.getElementById("standalone-focus"), STANDALONE_ID);
+    dialog.showModal();
+  }
+
+  var timer = root.StudyBrainTimer = {
+    standaloneId: STANDALONE_ID,
+    openStandalone: openStandalone,
     runningId: clock.runningId,
     remainingLabel: function () {
       var id = clock.runningId();
       return id ? format(clock.get(id).remaining) : "";
     },
     pause: function(id) { var ok=clock.pause(id); render(); return ok; },
-    mount: function (el, task) {
-      mounted = {el: el, id: task.id};
-      el.innerHTML = '<div class="task-timer-heading">זמן מיקוד למטלה</div><div class="hourglass-stage" aria-hidden="true"><div class="hourglass"><div class="hourglass-turn"><i class="glass-cap"></i><div class="glass-bulbs"><i class="glass-top"></i><i class="glass-bottom"></i><i class="sand-stream"></i></div><i class="glass-cap"></i></div></div></div><div class="task-timer-time" role="timer" aria-live="off" dir="ltr">50:00</div><p class="task-timer-status" aria-live="polite"></p><div class="task-timer-controls"><button type="button" class="btn btn-primary task-timer-toggle">התחל · 50 דקות</button><button type="button" class="btn btn-ghost task-timer-reset">איפוס ל־50 דקות</button></div><p class="task-timer-storage" role="status"></p>';
+    mount: function (el, id) {
+      mounted = {el: el, id: id};
+      el.innerHTML = (id === STANDALONE_ID ? "" : '<div class="task-timer-heading">זמן מיקוד למטלה</div>') +
+        '<div class="hourglass-stage" aria-hidden="true"><div class="hourglass"><div class="hourglass-turn"><i class="glass-cap"></i><div class="glass-bulbs"><i class="glass-top"></i><i class="glass-bottom"></i><i class="sand-stream"></i></div><i class="glass-cap"></i></div></div></div><div class="task-timer-time" role="timer" aria-live="off" dir="ltr">50:00</div><p class="task-timer-status" aria-live="polite"></p><div class="task-timer-controls"><button type="button" class="btn btn-primary task-timer-toggle">התחל · 50 דקות</button><button type="button" class="btn btn-ghost task-timer-reset">איפוס ל־50 דקות</button></div><p class="task-timer-storage" role="status"></p>';
       function update(ok) { el.querySelector(".task-timer-storage").textContent = ok ? "" : "לא ניתן לשמור את הטיימר בדפדפן. רענון עלול לאבד את ההתקדמות."; render(); }
       var turn = el.querySelector(".hourglass-turn");
       turn.addEventListener("animationend", function () { turn.classList.remove("turning"); });
       el.querySelector(".task-timer-toggle").addEventListener("click", function () {
-        if (clock.get(task.id).running) {
-          update(clock.pause(task.id));
+        if (clock.get(id).running) {
+          update(clock.pause(id));
           return;
         }
         if (!root.matchMedia("(prefers-reduced-motion: reduce)").matches) turn.classList.add("turning");
-        update(clock.start(task.id));
+        update(clock.start(id));
       });
-      el.querySelector(".task-timer-reset").addEventListener("click", function () { update(clock.reset(task.id)); });
+      el.querySelector(".task-timer-reset").addEventListener("click", function () { update(clock.reset(id)); });
       render();
     }
   };
+  document.getElementById("open-pomodoro").addEventListener("click", openStandalone);
   setInterval(render, 250);
   document.addEventListener("visibilitychange", render);
 })(typeof window !== "undefined" ? window : this);

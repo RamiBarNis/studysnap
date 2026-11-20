@@ -6,7 +6,7 @@
   <title>StudyBrain — University study workspace</title>
   <meta name="description" content="Organize university course files, assignment deadlines, and focus sessions locally." />
   <link rel="stylesheet" href="css/styles.css?v=open-tasks" />
-  <link rel="stylesheet" href="css/heart-theme.css?v=confirm-completion" />
+  <link rel="stylesheet" href="css/heart-theme.css?v=standalone-pomodoro" />
 </head>
 <body>
 
@@ -20,6 +20,7 @@
         </a>
         <span class="spacer"></span>
         <div class="nav-links">
+          <button id="open-pomodoro" class="btn btn-ghost btn-sm" type="button" aria-haspopup="dialog"><span data-icon="timer"></span> פרומודורו</button>
           <button class="icon-btn theme-toggle" type="button" aria-label="Switch to dark mode"></button>
           <div id="auth-control"><button id="auth-open" type="button" class="btn btn-ghost btn-sm">התחברות עם Google</button><span id="auth-name" hidden></span><button id="auth-logout" type="button" class="btn btn-ghost btn-sm" hidden>התנתקות</button></div>
         </div>
@@ -133,6 +134,13 @@
   <div id="modal-root"></div>
   <div class="toast-region" id="toast-root" aria-live="polite"></div>
 
+  <dialog id="pomodoro-dialog" dir="rtl" aria-labelledby="pomodoro-title">
+    <form method="dialog" class="modal-header">
+      <h2 id="pomodoro-title">פרומודורו</h2>
+      <button class="icon-btn" type="submit" aria-label="סגירה">×</button>
+    </form>
+    <div id="standalone-focus" class="task-focus"></div>
+  </dialog>
   <dialog id="task-completion-dialog" dir="rtl" aria-labelledby="task-completion-title" aria-describedby="task-completion-name">
     <form method="dialog">
       <h2 id="task-completion-title">סיימת את המטלה?</h2>
@@ -164,9 +172,9 @@
   <script src="js/auth.js?v=qa-5" defer></script>
   <script src="js/icons.js?v=qa-5"></script>
   <script src="js/data.js?v=qa-5"></script>
-  <script src="js/pomodoro.js?v=hourglass-1"></script>
+  <script src="js/pomodoro.js?v=standalone-pomodoro"></script>
   <script src="js/task-backup.js?v=focus-calendar-2"></script>
-  <script src="js/app.js?v=confirm-completion"></script>
+  <script src="js/app.js?v=standalone-pomodoro"></script>
   <script src="js/library.js?v=workspace-polish"></script>
   <script src="js/workspace.js?v=focus-calendar-1"></script>
 </body>

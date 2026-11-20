@@ -202,9 +202,12 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
 .exam-card .eyebrow {color:#e6caff}
 .calendar-scroll {border-radius:12px;overflow:hidden}
 .exam-actions {display:flex;gap:10px;justify-content:flex-start;margin-top:18px}
-#exam-dialog, #task-completion-dialog {background:#25324b;color:var(--text);border:1px solid var(--border);border-radius:26px;padding:28px;width:min(480px,calc(100% - 28px));max-height:90svh;overflow:auto}
-#exam-dialog::backdrop, #task-completion-dialog::backdrop {background:#071022bb;backdrop-filter:blur(10px)}
+#exam-dialog, #task-completion-dialog, #pomodoro-dialog {background:#25324b;color:var(--text);border:1px solid var(--border);border-radius:26px;padding:28px;width:min(480px,calc(100% - 28px));max-height:90svh;overflow:auto}
+#exam-dialog::backdrop, #task-completion-dialog::backdrop, #pomodoro-dialog::backdrop {background:#071022bb;backdrop-filter:blur(10px)}
 #task-completion-name {margin:12px 0;overflow-wrap:anywhere}
+#pomodoro-dialog .modal-header {padding:0;border:0}
+#open-pomodoro {min-height:44px}
+@media(max-width:600px) { #open-pomodoro {padding-inline:10px;font-size:12px} #open-pomodoro .icon {display:none} #pomodoro-dialog {padding:18px} }
 #exam-dialog .form-label {margin-top:16px;display:block}
 #exam-form-error {color:#ffb9bf;font-size:13px;margin-top:12px}
 .calendar-toolbar {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
@@ -270,7 +273,7 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
 .task-pdf-download { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .task-documents .btn, .task-timer-controls .btn { border-radius: 999px; min-height: 44px; box-shadow: 0 5px 14px #050d2555; }
 
-#task-focus {
+#task-focus, #standalone-focus {
   padding: 18px 12px;
   background: radial-gradient(ellipse at 50% 33%, #5665a36b, transparent 64%),
     linear-gradient(145deg, #273653, #22304a);
