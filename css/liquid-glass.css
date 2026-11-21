@@ -15,9 +15,10 @@
 
 body {
   background: #0b152a url("../assets/studybrain-glass.webp") center center / cover fixed no-repeat;
+  background-blend-mode: luminosity;
 }
 
-body::before { background: #070e2426; }
+body::before { background: #0b152a26; }
 
 .workspace-tabs {
   position: sticky;
