@@ -30,12 +30,17 @@
       e.preventDefault();show(tabs[next].dataset.panel);tabs[next].focus();
     });
   });
-  window.StudyBrainWorkspace={show:show};
+  window.StudyBrainWorkspace={
+    show:show,
+    examCourses:function(){return exams.map(function(exam){return exam.course;});}
+  };
   function node(tag,text,cls) {var el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;}
   function button(text,action,cls) {var el=node('button',text,cls||'btn btn-ghost btn-sm');el.type='button';el.addEventListener('click',action);return el;}
   function persist(next) {
-    try {localStorage.setItem('studybrain-exams',JSON.stringify(next));exams=next;return true;}
+    try {localStorage.setItem('studybrain-exams',JSON.stringify(next));exams=next;}
     catch(_){return false;}
+    window.dispatchEvent(new Event('studybrain-exams-changed'));
+    return true;
   }
   function openExam(exam) {
     editing=exam?exam.id:null;
@@ -98,5 +103,6 @@
     $('calendar-today').addEventListener('click',function(){month=new Date();month.setDate(1);month.setHours(12,0,0,0);renderCalendar();});
     window.addEventListener('studybrain-tasks-changed',renderCalendar);
     renderExams();renderCalendar();show('home');
+    window.dispatchEvent(new Event('studybrain-exams-changed'));
   });
 })();

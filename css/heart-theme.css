@@ -152,10 +152,8 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
 @media(max-width:900px) { .work-summary {grid-template-columns:1.4fr .5fr .5fr;gap:12px} .summary-next {grid-column:1/-1;border-right:0;border-top:1px solid var(--border);padding:14px 0 0;display:grid;grid-template-columns:1fr auto} .summary-next>.eyebrow,.summary-next>strong,.summary-next>#heart-next-meta {grid-column:1} .summary-next>.btn {grid-column:2;grid-row:1/4;align-self:center} .dash-grid {grid-template-columns:1fr} }
 @media(max-width:600px) { .work-toolbar {align-items:flex-start;flex-direction:column;gap:14px} .work-toolbar h1 {font-size:25px} .work-actions {width:100%} .work-actions>.btn {flex:1} .work-summary {padding:14px;gap:8px;margin-bottom:18px} .work-summary .heart-stage {width:64px;min-width:64px;height:88px} .summary-progress {gap:8px} .summary-percent strong {font-size:28px} .summary-count strong {font-size:24px} .summary-count span {font-size:11px} .work-summary .eyebrow {font-size:10px} #heart-caption {font-size:10px} .summary-next>strong {font-size:14px} }
 /* Separate workspaces around a central heart home. */
-.workspace-tabs {display:flex;justify-content:center;gap:8px;margin:0 auto 20px;padding:7px;border:1px solid var(--border);border-radius:100px;background:#18263c99;backdrop-filter:blur(22px);width:fit-content;max-width:100%}
-.workspace-tabs button {padding:12px 23px;border-radius:100px;white-space:nowrap;color:#c5d1e6;font-size:14px;min-height:44px;transition:background .15s}
-.workspace-tabs button:hover {background:#ffffff12}
-.workspace-tabs button[aria-selected=true] {background:#c4e3f6;color:#18263c}
+.workspace-tabs {display:flex;justify-content:center;gap:10px;margin:0 auto 27px;width:fit-content;max-width:100%}
+.workspace-tabs button {padding:10px 23px;white-space:nowrap;font-size:14px;min-height:46px}
 .workspace-panel {animation:workspace-enter .25s ease-out}
 @keyframes workspace-enter {from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .home-space {position:relative;min-height:calc(100svh - 184px);display:flex;flex-direction:column;align-items:center;padding:10px 0 24px}
@@ -235,7 +233,7 @@ body::before { content:""; position:fixed; inset:0; background:#07122655; pointe
 #calendar-note {margin:16px 0 0}
 @media(max-width:1050px) {.home-heart-area {width:52%}.home-date h1 {font-size:20px}.home-date {max-width:220px}.home-date p {max-width:180px}.tasks-layout {grid-template-columns:1fr}}
 @media(max-width:700px) {
- .workspace-tabs {width:100%;justify-content:space-between;gap:1px;border-radius:22px;padding:5px;margin-bottom:12px}.workspace-tabs button {padding:10px 8px;font-size:12px;min-width:0}
+ .workspace-tabs {width:100%;justify-content:center;gap:clamp(4px,1.5vw,8px);margin-bottom:16px}.workspace-tabs button {padding:8px clamp(6px,2vw,12px);font-size:12px;min-height:44px}
  .home-space {min-height:calc(100svh - 160px);padding-top:6px}.home-date {position:static;text-align:center;max-width:none}.home-date h1 {font-size:19px}.home-date p {max-width:none;margin-bottom:0}
  .home-heart-area {width:min(420px,90%);margin-top:8px}.home-space .heart-stage {height:clamp(300px,45vh,430px)}
  .home-progress {padding:8px 20px}.home-progress>strong {font-size:26px}.home-stats {gap:18px;margin-top:18px;flex-wrap:wrap;justify-content:center}
