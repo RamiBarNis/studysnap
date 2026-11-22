@@ -7,7 +7,7 @@
   var courseGrid = document.getElementById("course-grid");
   var courseInput = document.getElementById("course-files");
   var courseStatus = document.getElementById("course-status");
-  var courseDialog = document.getElementById("course-dialog");
+  var courseDialog = document.getElementById("panel-course");
   var courseDialogTitle = document.getElementById("course-dialog-title");
   var courseDialogFiles = document.getElementById("course-dialog-files");
   var courseDialogStatus = document.getElementById("course-dialog-status");
@@ -172,7 +172,17 @@
       var name = node("bdi", "course-file-name", previewType ? file.name.slice(0, -extension.length - 1) || file.name : file.name);
       open.append(icon, name);
       if (previewType) open.append(node("bdi", "course-file-type", extension.toUpperCase()));
-      row.append(open);
+      var remove = button("מחיקה", async function () {
+        if (!confirm("למחוק את הקובץ ״" + file.name + "״?")) return;
+        remove.disabled = true;
+        try {
+          await transaction("readwrite", function (store) { return store.delete(file.id); });
+          await render();
+          courseDialogStatus.textContent = "הקובץ נמחק.";
+        } catch (_) { courseDialogStatus.textContent = "לא ניתן למחוק את הקובץ. נסה שוב."; remove.disabled = false; }
+      });
+      remove.setAttribute("aria-label", "מחיקת " + file.name);
+      row.append(open, remove);
       return row;
     });
   }
@@ -207,25 +217,15 @@
       var title = node("h3", "course-card-heading");
       var open = button("", function () {
         courseDialogTitle.textContent = course;
-        courseDialogFiles.replaceChildren(...courseFileRows(files));
         courseDialogStatus.textContent = "";
-        courseDialog.showModal();
+        renderCoursePage();
+        window.StudyBrainWorkspace.show("course");
+        courseDialogTitle.focus();
       }, "course-card-open");
       open.dataset.courseAction = "open";
-      open.setAttribute("aria-haspopup", "dialog");
-      open.append(node("bdi", "course-name", course));
-      var chevron = node("span", "course-chevron");
-      chevron.innerHTML = window.icon("chevron-right");
-      open.append(chevron);
+      open.append(node("bdi", "course-name", course), node("span", "course-count", files.length + " קבצים"));
       title.append(open);
-      var preview = node("ul", "course-file-list");
-      preview.append(...courseFileRows(files.slice(0, 2)));
-      var upload = button("הוספת קבצים", function () { selectCourseFiles(course); }, "btn btn-primary course-upload");
-      upload.insertAdjacentHTML("afterbegin", window.icon("plus"));
-      upload.dataset.courseAction = "upload";
-      upload.setAttribute("aria-label", "הוספת קבצים לקורס " + course);
-      upload.disabled = courseInput.disabled;
-      card.append(title, preview, upload);
+      card.append(title);
       return card;
     });
     courseGrid.replaceChildren(...(cards.length ? cards : [node("p", "course-empty-state", "הוסף קורס כדי לשמור בו קובצי PDF ותמונות.")]));
@@ -234,9 +234,23 @@
       if (replacement) replacement.querySelector('[data-course-action="' + action + '"]').focus({preventScroll: true});
     }
     courseDialogUpload.disabled = courseInput.disabled;
-    if (courseDialog.open) {
-      courseDialogFiles.replaceChildren(...courseFileRows(courses.get(courseDialogTitle.textContent) || []));
-    }
+    renderCoursePage();
+  }
+  function renderCoursePage() {
+    var course = courseDialogTitle.textContent;
+    var files = libraryFiles.filter(function(file){return ((file.course || "").trim() || uncategorized) === course;});
+    function isPhoto(file) {return Object.hasOwn(photoTypes, fileExtension(file.name));}
+    courseDialogFiles.replaceChildren(...courseFileRows(files.filter(function(file){return !isPhoto(file);})));
+    document.getElementById("course-images").replaceChildren(...courseFileRows(files.filter(isPhoto)));
+    var deadlines = document.getElementById("course-deadlines");
+    var tasks = window.StudyBrainTasks.list().filter(function(task){return task.subject.trim() === course && !task.completed;})
+      .sort(function(a,b){return a.due.localeCompare(b.due);});
+    deadlines.replaceChildren(...tasks.map(function(task){
+      var row=node("li", "course-file");
+      row.append(button(task.title + " · " + (/^\d{4}-\d{2}-\d{2}$/.test(task.due) ? new Date(task.due+'T12:00:00').toLocaleDateString('he-IL') : "ללא תאריך"), function(){window.StudyBrainTasks.open(task.id);}, "deadline-card"));
+      return row;
+    }));
+    if (!tasks.length) deadlines.append(node("li", "course-empty", "אין הגשות פתוחות בקורס הזה."));
   }
   async function render() {
     var version = ++renderVersion;
@@ -285,7 +299,7 @@
       var extension = fileExtension(file.name);
       var isCourseFile = extension === "pdf" || Object.hasOwn(photoTypes, extension);
       var isLibraryFile = /\.(docx?|pptx?|txt|csv|zip)$/i.test(file.name);
-      if (file.size > 25 * 1024 * 1024 || !(isCourseFile || (picker === input && isLibraryFile))) {
+      if (file.size > 25 * 1024 * 1024 || !(isCourseFile || isLibraryFile)) {
         rejected.push(file.name); continue;
       }
       try {
@@ -308,7 +322,7 @@
     saveFiles(input, document.getElementById("library-course").value.trim() || uncategorized, status);
   });
   courseInput.addEventListener("change", function () {
-    saveFiles(courseInput, courseInput.dataset.course, courseDialog.open ? courseDialogStatus : courseStatus);
+    saveFiles(courseInput, courseInput.dataset.course, !courseDialog.hidden ? courseDialogStatus : courseStatus);
   });
   courseDialogUpload.addEventListener("click", function () {
     selectCourseFiles(courseDialogTitle.textContent);

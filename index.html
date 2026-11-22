@@ -7,7 +7,7 @@
   <meta name="description" content="Organize university course files, assignment deadlines, and focus sessions locally." />
   <link rel="stylesheet" href="css/styles.css?v=open-tasks" />
   <link rel="stylesheet" href="css/heart-theme.css?v=individual-tabs" />
-  <link rel="stylesheet" href="css/liquid-glass.css?v=3" />
+  <link rel="stylesheet" href="css/liquid-glass.css?v=focus-minimal-4" />
 </head>
 <body>
   <svg width="0" height="0" aria-hidden="true" style="position:absolute">
@@ -32,7 +32,7 @@
         </a>
         <span class="spacer"></span>
         <div class="nav-links">
-          <button id="open-pomodoro" class="btn btn-ghost btn-sm liquid-button" type="button" aria-haspopup="dialog"><span data-icon="timer"></span> פרומודורו</button>
+          <button id="open-pomodoro" class="btn btn-ghost btn-sm liquid-button" type="button"><span data-icon="timer"></span> פומודורו</button>
           <button class="icon-btn theme-toggle" type="button" aria-label="Switch to dark mode"></button>
           <div id="auth-control"><button id="auth-open" type="button" class="btn btn-ghost btn-sm liquid-button">התחברות עם Google</button><span id="auth-name" hidden></span><button id="auth-logout" type="button" class="btn btn-ghost btn-sm liquid-button" hidden>התנתקות</button></div>
         </div>
@@ -56,6 +56,12 @@
           <div class="home-progress" dir="rtl"><strong dir="ltr"><span id="heart-percent">100</span>%</strong></div>
         </div>
         <div class="home-stats" dir="rtl"><span id="heart-left" role="status">0 מטלות לביצוע</span><button id="quick-add-task" type="button" class="btn btn-primary"><span data-icon="plus"></span> מטלה חדשה</button></div>
+        <section class="home-deadlines card" dir="rtl" aria-labelledby="home-deadlines-title">
+          <div class="home-deadlines-head"><h2 id="home-deadlines-title">הגשות קרובות</h2>
+            <button id="show-all-tasks" class="btn btn-ghost btn-sm" type="button">הצגת כל המטלות ‹</button>
+          </div>
+          <ul id="home-deadline-list"></ul>
+        </section>
         <section class="home-courses" dir="rtl" aria-labelledby="home-courses-title">
           <div class="course-section-head">
             <h2 id="home-courses-title">הקורסים שלי</h2>
@@ -63,13 +69,7 @@
           </div>
           <p id="course-status" class="workspace-status" role="status"></p>
           <div id="course-grid" class="course-grid"></div>
-          <input id="course-files" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,.heic,.heif" hidden />
-        </section>
-        <section class="home-deadlines card" dir="rtl" aria-labelledby="home-deadlines-title">
-          <div class="home-deadlines-head"><h2 id="home-deadlines-title">הגשות קרובות</h2>
-            <button id="show-all-tasks" class="btn btn-ghost btn-sm" type="button">הצגת כל המטלות ‹</button>
-          </div>
-          <ul id="home-deadline-list"></ul>
+          <input id="course-files" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,.heic,.heif,.doc,.docx,.ppt,.pptx,.txt,.csv,.zip" hidden />
         </section>
       </section>
       <section id="panel-tasks" class="workspace-panel" role="tabpanel" aria-labelledby="tab-tasks" hidden><div class="tasks-layout">          <section class="card checklist-card" aria-labelledby="checklist-title" dir="rtl">
@@ -148,6 +148,34 @@
         <div class="calendar-scroll"><div id="calendar-grid" class="calendar-grid"></div></div>
         <p id="calendar-note" class="card-sub"></p>
       </section>
+      <section id="panel-course" class="workspace-panel" dir="rtl" aria-labelledby="course-dialog-title" hidden>
+        <button class="btn btn-ghost" type="button" data-back-home>חזרה לבית</button>
+        <header class="course-section-head"><h1 id="course-dialog-title" tabindex="-1"></h1><button id="course-dialog-upload" class="btn btn-primary" type="button">הוספת קבצים ותמונות</button></header>
+        <p id="course-dialog-status" class="workspace-status" role="status"></p>
+        <div class="course-detail-grid">
+          <section class="card"><h2>הגשות קרובות</h2><ul id="course-deadlines" class="course-file-list"></ul></section>
+          <section class="card"><h2>חומרי לימוד</h2><ul id="course-dialog-files" class="course-file-list"></ul></section>
+          <section class="card"><h2>צילומי מסך ותמונות</h2><ul id="course-images" class="course-file-list"></ul></section>
+        </div>
+      </section>
+      <section id="panel-pomodoro" class="workspace-panel" dir="rtl" aria-labelledby="pomodoro-title" hidden>
+        <button class="btn btn-ghost" type="button" data-back-home>חזרה לבית</button>
+        <h1 id="pomodoro-title" tabindex="-1">פומודורו · זמן להתרכז</h1>
+        <div class="pomodoro-layout">
+          <section class="pomodoro-stage"><div id="standalone-focus" class="task-focus"></div></section>
+          <section id="focus-statistics" class="card focus-statistics"><h2>הסשנים שלי</h2><p>כל סשן שמסתיים במלואו נספר אוטומטית. הנתונים נשמרים בדפדפן הזה.</p>
+            <label class="form-label" for="focus-week">שבוע לפי תאריך</label><input id="focus-week" class="form-input" type="date">
+            <p id="focus-week-title"></p>
+            <div class="focus-charts">
+              <section class="focus-chart-panel"><h3>סשנים לפי יום</h3><div id="focus-chart" class="focus-chart" aria-label="סשנים שהושלמו בכל יום בשבוע"></div></section>
+              <section class="focus-chart-panel"><h3>המגמה השבועית</h3><div id="focus-line-chart" class="focus-line-chart"></div></section>
+            </div>
+            <p id="focus-week-total" role="status"></p>
+            <label class="form-label" for="focus-month">סיכום חודשי</label><input id="focus-month" class="form-input" type="month">
+            <p id="focus-month-total" class="focus-month-total" role="status"></p>
+          </section>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -167,15 +195,6 @@
       </div>
     </form>
   </dialog>
-  <dialog id="course-dialog" class="course-sheet" dir="rtl" aria-labelledby="course-dialog-title">
-    <form method="dialog" class="course-dialog-head">
-      <h2 id="course-dialog-title" dir="auto"></h2>
-      <button class="icon-btn" type="submit" aria-label="סגירה"><span data-icon="x"></span></button>
-    </form>
-    <ul id="course-dialog-files" class="course-file-list"></ul>
-    <button id="course-dialog-upload" class="btn btn-primary" type="button"><span data-icon="plus"></span> הוספת קבצים</button>
-    <p id="course-dialog-status" class="workspace-status" role="status"></p>
-  </dialog>
   <dialog id="course-file-preview" class="course-sheet" dir="rtl" aria-labelledby="course-preview-title">
     <form method="dialog" class="course-dialog-head">
       <h2 id="course-preview-title" dir="auto"></h2>
@@ -186,13 +205,6 @@
       <a id="course-preview-open" class="btn btn-primary" target="_blank" rel="noopener noreferrer" hidden>פתיחת PDF בכרטיסייה חדשה</a>
       <a id="course-preview-download" class="btn btn-ghost">הורדה</a>
     </div>
-  </dialog>
-  <dialog id="pomodoro-dialog" dir="rtl" aria-labelledby="pomodoro-title">
-    <form method="dialog" class="modal-header">
-      <h2 id="pomodoro-title">פרומודורו</h2>
-      <button class="icon-btn" type="submit" aria-label="סגירה">×</button>
-    </form>
-    <div id="standalone-focus" class="task-focus"></div>
   </dialog>
   <dialog id="task-completion-dialog" dir="rtl" aria-labelledby="task-completion-title" aria-describedby="task-completion-name">
     <form method="dialog">
@@ -225,10 +237,10 @@
   <script src="js/auth.js?v=qa-5" defer></script>
   <script src="js/icons.js?v=qa-5"></script>
   <script src="js/data.js?v=qa-5"></script>
-  <script src="js/pomodoro.js?v=standalone-pomodoro"></script>
+  <script src="js/pomodoro.js?v=focus-minimal-4"></script>
   <script src="js/task-backup.js?v=focus-calendar-2"></script>
-  <script src="js/app.js?v=standalone-pomodoro"></script>
-  <script src="js/library.js?v=home-courses"></script>
-  <script src="js/workspace.js?v=home-courses"></script>
+  <script src="js/app.js?v=focus-minimal-4"></script>
+  <script src="js/library.js?v=focus-minimal-4"></script>
+  <script src="js/workspace.js?v=focus-minimal-4"></script>
 </body>
 </html>

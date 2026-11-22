@@ -693,7 +693,7 @@
     });
     var area = $("#plan-area");
     if (!active && !standalone) {
-      area.textContent = "אפשר להתחיל סשן של 50 דקות מתוך מטלה או מכפתור הפרומודורו.";
+      area.textContent = "אפשר לבחור משך סשן ולהתחיל מתוך מטלה או מעמוד הפומודורו.";
       return;
     }
     area.innerHTML = '<div class="plan-summary"><strong>' + (standalone ? "פרומודורו" : escapeHtml(active.title)) +

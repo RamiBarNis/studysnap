@@ -13,11 +13,13 @@
   function dateKey(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function tasks() { return window.StudyBrainTasks ? window.StudyBrainTasks.list() : []; }
   function show(name) {
-    if (!tabs.some(function (t) {return t.dataset.panel===name;})) name='home';
+    if (!document.getElementById('panel-'+name)) name='home';
+    document.querySelectorAll('.workspace-panel').forEach(function(panel){panel.hidden=panel.id!=='panel-'+name;});
     tabs.forEach(function (t) { var selected=t.dataset.panel===name; t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1; $('panel-'+t.dataset.panel).hidden=!selected; });
     if(name==='calendar') renderCalendar();
     if(name==='exams') renderExams();
   }
+  document.querySelectorAll('[data-back-home]').forEach(function(button){button.addEventListener('click',function(){show('home');$('tab-home').focus();});});
   tabs.forEach(function (tab,index) {
     tab.addEventListener('click',function(){show(tab.dataset.panel);});
     tab.addEventListener('keydown',function(e){

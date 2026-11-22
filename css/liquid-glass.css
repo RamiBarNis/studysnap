@@ -14,8 +14,8 @@
 }
 
 body {
-  background: #0b152a url("../assets/studybrain-glass.webp") center center / cover fixed no-repeat;
-  background-blend-mode: luminosity;
+  background: #0b152a url("../assets/forest.png") center top / cover fixed no-repeat;
+  background-blend-mode: normal;
 }
 
 body::before { background: #0b152a26; }
@@ -284,3 +284,67 @@ body::before { background: #0b152a26; }
   .liquid-button, .liquid-button:hover { --lens-tint: #263954; }
   .liquid-button[aria-selected="true"] { --lens-tint: #b7e6ff; }
 }
+
+/* Course pages and focus history. */
+.home-deadlines {width:100%;}
+.course-grid {grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;}
+.course-card {padding:0;aspect-ratio:1;overflow:hidden;}
+.course-card-heading,.course-card-open {height:100%;}
+.course-card-open {flex-direction:column;justify-content:center;text-align:center;padding:18px;font-size:clamp(16px,1.8vw,22px);}
+.course-count {font-size:14px;font-weight:400;color:var(--muted);}
+.course-detail-grid {display:grid;gap:22px;margin-top:24px;}
+.course-file {display:flex;align-items:center;gap:12px;padding-block:10px;}
+.course-file-open {min-width:0;flex:1;}
+.course-file > .btn {flex-shrink:0;}
+.course-detail-grid .course-file-name {white-space:normal;overflow-wrap:anywhere;}
+#panel-course h1,#panel-pomodoro h1 {font-size:clamp(25px,4vw,38px);margin-block:24px;}
+.pomodoro-layout {display:grid;grid-template-columns:minmax(0,1fr);gap:48px;}
+.pomodoro-layout .task-focus {margin:0;}
+.timer-duration {display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+.timer-duration input {width:90px;}
+.focus-chart {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end;margin-block:24px;}
+.focus-day {display:flex;flex-direction:column;align-items:center;gap:8px;font-size:14px;}
+.focus-bar-track {height:140px;width:100%;display:flex;align-items:end;justify-content:center;}
+.focus-bar {width:65%;min-height:2px;background:linear-gradient(#c3efff,#7fafe4);border-radius:8px 8px 0 0;}
+.focus-month-total {font-size:24px;}
+@media(max-width:700px){.pomodoro-layout {grid-template-columns:1fr;}.course-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.focus-chart {gap:5px;}.course-section-head {flex-wrap:wrap;}}
+
+/* The timer fills the first screen; session history follows below. */
+ .pomodoro-stage {min-height:calc(100svh - 190px);display:grid;place-items:center;padding:24px 0 56px;}
+.pomodoro-stage #standalone-focus {
+  position:relative;width:min(580px,82vw);aspect-ratio:1;box-sizing:border-box;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  border:1px solid #ffffff66;border-radius:50%;background:transparent;
+  box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:30px;
+  color:#fff;text-shadow:0 2px 18px #07122688;
+}
+.focus-time-row {position:relative;direction:ltr;}
+.pomodoro-stage .task-timer-time {font-size:clamp(64px,11vw,116px);font-weight:300;line-height:1.15;letter-spacing:-4px;}
+.focus-label {font-size:clamp(24px,4vw,36px);font-weight:300;margin:4px 0 14px;}
+.pomodoro-stage .task-timer-status {font-size:14px;margin:0 0 14px;max-width:270px;}
+.pomodoro-stage .task-timer-status:empty {display:none;}
+.pomodoro-stage .task-timer-controls {gap:10px;}
+.pomodoro-stage .task-timer-controls .btn {min-width:74px;min-height:36px;padding:5px 18px;font-size:14px;border:1px solid #ffffff85;background:#ffffff08;box-shadow:none;color:#fff;border-radius:999px;}
+.pomodoro-stage .task-timer-controls .btn:hover {background:#ffffff20;}
+.focus-settings {position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);direction:rtl;text-shadow:none;z-index:2;}
+.focus-settings summary {list-style:none;cursor:pointer;font-size:26px;line-height:44px;width:44px;height:44px;text-align:center;color:#fff;border-radius:50%;}
+.focus-settings summary::-webkit-details-marker {display:none;}
+.focus-settings summary:hover {background:#ffffff15;}
+.focus-settings summary:focus-visible {outline:2px solid #fff;outline-offset:3px;}
+.focus-settings-panel {position:absolute;top:50px;right:0;width:260px;max-width:70vw;padding:20px;border-radius:16px;border:1px solid #ffffff45;background:#112334ed;box-shadow:0 15px 40px #0005;backdrop-filter:blur(18px);}
+.focus-settings-panel .timer-duration {font-size:16px;justify-content:flex-start;margin:0;}
+.focus-settings-panel p {font-size:14px;color:#c6d8e7;margin:12px 0;}
+.pomodoro-stage .task-timer-storage {max-width:240px;}
+.focus-statistics {scroll-margin-top:90px;}
+.focus-statistics > .form-input {max-width:320px;}
+.focus-charts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin-block:28px;}
+.focus-chart-panel {min-width:0;border:1px solid var(--glass-edge);border-radius:20px;padding:20px;background:#08182d40;}
+.focus-chart-panel h3 {font-size:18px;margin:0 0 16px;}
+.focus-line-chart svg {display:block;width:100%;height:auto;overflow:visible;}
+.focus-line-chart text {fill:#d6e4f5;font-size:14px;font-family:inherit;}
+.focus-line-chart .line-grid {stroke:#c4d9fd25;stroke-width:1;}
+.focus-line-chart .session-line {fill:none;stroke:#a6e7ff;stroke-width:3;stroke-linejoin:round;stroke-linecap:round;}
+.focus-line-chart .session-point {fill:#d5f4ff;stroke:#233d58;stroke-width:2;}
+@media(max-width:700px){.focus-charts {grid-template-columns:1fr;gap:20px;}.pomodoro-stage {min-height:calc(100svh - 160px);padding:24px 12px;}.focus-chart-panel {padding:16px 10px;}}
+
+@media(max-width:500px){.pomodoro-stage #standalone-focus {width:86vw;padding:24px 14px;}.pomodoro-stage .task-timer-time {font-size:clamp(56px,17vw,80px);letter-spacing:-2px;}.focus-settings {left:calc(100% + 1px);}.focus-settings summary {width:32px;}.focus-settings-panel {right:0;}.pomodoro-stage .task-timer-status {font-size:13px;max-width:210px;}}
